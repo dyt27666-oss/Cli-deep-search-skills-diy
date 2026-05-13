@@ -29,9 +29,9 @@
 竞赛 / 工业 ML 工作流里有个反复出现的痛点：
 
 - 🌫️ **同结构 KILL 重做**——3 个月前因为 X 失败过的方向，今天换个名字又跑一遍，浪费 1 GPU-day
-- 📚 **决策证据散在 5 个文件**——`decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / 平台 metric CSV，人脑跨文件交叉验证容易漏
+- 📚 **决策证据散在 5 个文件**——`decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / 平台 metric CSV，跨文件检索和交叉验证很耗心力
 - 🔍 **新论文要 token 烧得心慌**——arXiv + Semantic Scholar 直接调用 30k+ token 一次，结果可能是 GPT 幻觉的不存在论文
-- 🚧 **实验前防呆缺位**——提交训练前没有"这个轴关闭过吗"的自动检查，submission quota 就这么浪费
+- 🧭 **新方向调研没有统一入口**——论文、笔记、memory、平台记录分散在各处，想判断一个方向要来回翻证据
 
 ### 效果对比
 
@@ -64,7 +64,7 @@
 axis=gating → CLOSED-AXIS-HIT
 3/3 历史 KILL (ExpB / ExpC / ExpD)
 铁证: experiment_logs/exp_d.md:21
-Verdict: BLOCKED
+Verdict: 降权 —— 同轴已 3 次尝试低分，但不代表方向失活。建议 (a) 确认本次设计与历史失败结构不同（见引用）；(b) 与其他轴组合，可能改写失败机制；(c) 在其他轴未尽前先排到后面。另有 5 篇论文提示可尝试替代 gating 风格。Decision: yours.
 报告: docs/research/.../report.md
 ```
 
@@ -76,8 +76,8 @@ Verdict: BLOCKED
 
 ## ✨ 特性
 
-- 🔬 **三 subcommand 一个 skill** — `postmortem`（实验后复盘）/ `inquiry`（跨实验问答）/ `precheck`（提交前防呆）
-- 🛡️ **Gate A 两阶段外搜** — Codex 1 轮 challenge 角度 → 用户 chips 选 → 每条引用强制 WebFetch 验证
+- 🔬 **三 subcommand 一个 skill** — `postmortem`（回看刚发生的实验并串证据）/ `inquiry`（跨实验问答）/ `precheck`（行动前先验证据搜索）
+- 🔎 **Gate A 两阶段外搜** — Codex 1 轮 challenge 搜索角度 → 用户 chips 选 → 每条引用强制 WebFetch 验证
 - 💬 **Gate C 通俗 chips** — 重大发现先用人话告诉你，再问要不要更新 prior
 - 📐 **Token-safe 检索** — 250k 行 metric CSV 走 helper 包装，永不直接 Read
 - 📂 **本地优先 / 外搜可选** — 默认只用 repo 本地 5 个数据源；外搜需 chips 显式授权
@@ -133,13 +133,13 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 
 ## 🚀 使用
 
-### 基础：提交训练前防呆
+### 基础：先验证据搜索
 
 ```
 /deep-search precheck "ExpA add layer-norm gating"
 ```
 
-效果：1 分钟内出 report，告诉你这个轴是否已关闭、有没有结构同源的历史 KILL、引用是哪几个 file:line。
+效果：1 分钟内出 report，汇总这个轴的历史证据、结构同源的历史 KILL、以及支撑判断的 file:line 引用。
 
 ### 进阶：实验后复盘
 
@@ -147,7 +147,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 /deep-search postmortem 98238
 ```
 
-前提：你已经用 [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) 或你的等效平台 CLI 工具 scrape 过平台状态，示例路径 `outputs/<platform>/jobs-summary.csv` 存在。
+前提：你的平台暴露了作业摘要文件（your platform exposes a job summary file — see retrieval/data_sources.md for how to map it），示例路径 `outputs/<platform>/jobs-summary.csv` 存在。
 
 ### 进阶：跨实验问答
 
@@ -163,14 +163,14 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 
 | Subcommand | 触发场景 | 默认模式 | Gate A 触发条件 |
 |---|---|---|---|
-| `postmortem <job_id>` | Job 跑完后复盘 | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
+| `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
 | `inquiry "<问题>"` | 跨实验问答 | local-only | 本地命中 < 3 |
-| `precheck "<新实验描述>"` | 提交训练前 | local-only | 机制不在 `paper_priors.md` 且用户要论文核查 |
+| `precheck "<新实验描述>"` | search for prior evidence on a proposed direction | local-only | 机制不在 `paper_priors.md` 且用户要论文核查 |
 
 每次调用 skill 都会**先输出一行 announcement**，明确选了哪个 subcommand、什么模式、为什么：
 
 ```
-[deep-search] precheck "ExpA ...", mode=local-only — gating axis closure check must precede any external search.
+[deep-search] precheck "ExpA ...", mode=local-only — searching local axis evidence before optional external research.
 ```
 
 ---
@@ -249,7 +249,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 ├── workflows/
 │   ├── postmortem.md          # 实验后复盘步骤
 │   ├── inquiry.md             # 跨实验问答步骤
-│   └── precheck.md            # 提交前防呆步骤
+│   └── precheck.md            # 行动前证据搜索步骤
 ├── gates/
 │   ├── gate_a_external_search.md   # 外搜协议 + Codex 1 轮 cap
 │   └── gate_c_major_finding.md     # 重大发现 chips 协议
@@ -274,7 +274,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 <details>
 <summary><strong>Q: 我的项目不是 ML 竞赛 / 不用某个特定实验平台，能用吗？</strong></summary>
 
-可以，但要改 `retrieval/data_sources.md` 里的数据源映射。Skill 的核心抽象是「跨多种证据源做 token-safe 检索 + 引用验证」，TAAC2026-CLI 或等效平台 CLI 的 CSV 路径只是一个具体实例。你的项目里换成 W&B / MLflow / Slurm sacct 的对应路径即可。
+可以，但要改 `retrieval/data_sources.md` 里的数据源映射。Skill 的核心抽象是「跨多种证据源做 token-safe 检索 + 引用验证」。如果你的平台暴露了作业摘要文件（your platform exposes a job summary file — see retrieval/data_sources.md for how to map it），把路径映射到 W&B / MLflow / Slurm sacct 等对应导出即可。
 
 </details>
 
@@ -322,7 +322,7 @@ v0 是文档绑定，没接桥接代码。真要用 Phase 2，要你 (1) 单独 
 | Claude Code | 2.x |
 | Python | 3.10+ |
 | 操作系统 | Linux / macOS（Windows 下 sed 需用 WSL 或 Git Bash） |
-| 可选: TAAC2026-CLI 或你的等效平台 CLI 工具 | 任意版本 |
+| 可选: your experiment-platform CLI 或作业摘要导出 | 任意版本 |
 | 可选: MediaCrawler | 任意版本（Phase 2 时） |
 
 ---

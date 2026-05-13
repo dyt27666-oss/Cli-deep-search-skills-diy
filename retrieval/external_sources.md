@@ -84,4 +84,4 @@ Out of scope for v0. If the user later asks for Telegram / Discord / QQ integrat
 | Zhihu / B站 articles (mostly public) | YES | NO (Phase 1 usually enough) |
 | 小红书 笔记 (mostly behind wall) | YES | YES (if user approves) |
 | 微博 / 抖音 / 快手 | YES | Only if user asks specifically |
-| Tencent algo.qq.com official forum | YES (anonymous + WebFetch) | NO |
+| Official algorithm community forum for your domain | YES (anonymous + WebFetch) | NO |

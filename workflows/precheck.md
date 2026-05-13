@@ -1,6 +1,6 @@
 # /deep-search precheck "<proposed exp>"
 
-Purpose: prevent structurally repeated experiment failures by checking a proposed idea against closed axes, paper priors, and recent local outcomes before a experiment submission.
+Purpose: search prior evidence for a proposed idea across closed axes, paper priors, and recent local outcomes before taking action.
 
 ## Required First Line
 
@@ -33,8 +33,8 @@ Use `local-only` initially. Switch to `local+external` only after Gate A is trig
    - Use `jobs-summary.csv` names only for lightweight job status context.
 6. Recommend one decision.
    - `GO`: axis open, paper prior is positive or neutral, and no recent structurally similar KILL.
-   - `RISKY`: axis is closed but the mechanism is arguably distinct; include a justification template.
-   - `BLOCKED`: axis is closed and the proposal is structurally similar; include a skip rationale with citations.
+   - `NEEDS-JUSTIFICATION`: limited prior evidence; proceed with explicit rationale.
+   - `REDUCED-PRIORITY`: N prior attempts on this axis closed at lower scores. Doesn't mean the axis is dead, but you should: (a) confirm your variant is structurally different from prior failures (see citations), OR (b) combine with another axis that compensates for the prior failure mode, OR (c) deprioritize unless other axes are exhausted.
 7. Apply Gate A only if the proposed mechanism references a paper or mechanism absent from `paper_priors.md` and `paper_analysis.md`, and the user wants paper-grounded sanity checking.
 8. Write output.
    - Directory: `<PROJECT_ROOT>/docs/research/deep_search/<YYYYMMDD-HHMM>_precheck/`.
@@ -44,4 +44,4 @@ Use `local-only` initially. Switch to `local+external` only after Gate A is trig
 
 ## Acceptance Coverage
 
-For `/deep-search precheck "ExpA add layer-norm gating"`, this workflow requires detecting the `gating` axis, checking `memory/feedback_gating_axis_closed.md` or noting its absence and falling back to local logs, flagging `CLOSED-AXIS-HIT` when present, citing ExpB and ExpC if local files contain those references, and returning `BLOCKED` when the mechanism is structurally similar to the closed gating pattern.
+For `/deep-search precheck "ExpA add layer-norm gating"`, this workflow requires detecting the `gating` axis, checking `memory/feedback_gating_axis_closed.md` or noting its absence and falling back to local logs, flagging `CLOSED-AXIS-HIT` when present, citing ExpB and ExpC if local files contain those references, and returning `REDUCED-PRIORITY` when prior same-axis attempts closed at lower scores and the mechanism is structurally similar to the closed gating pattern.

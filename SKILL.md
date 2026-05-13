@@ -1,9 +1,9 @@
 ---
 name: deep-search
 description: |
-  Project-local skill that turns experiment outcomes into knowledge updates.
+  Project-local knowledge-search skill that turns experiment outcomes into reusable evidence.
   Three subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (validate a proposed experiment against closed axes). Uses your experiment platform exports + local
+  precheck (search prior evidence for a proposed experiment direction). Uses your experiment platform exports + local
   docs + memory; delegates external paper search to Codex via a 1-round challenge protocol and
   verifies citations with WebFetch. Surfaces major findings as plain-language chips to the user.
 allowed-tools:
@@ -22,7 +22,7 @@ allowed-tools:
 
 # /deep-search
 
-Use this project-local skill when the user invokes `/deep-search <subcommand> [args]` to turn experiment evidence into a defensible knowledge update.
+Use this project-local skill when the user invokes `/deep-search <subcommand> [args]` to search experiment evidence and synthesize a defensible knowledge update.
 
 ## First Output: Mandatory Announcement
 
@@ -34,7 +34,7 @@ Examples:
 
 - `[deep-search] postmortem 98238, mode=local-only — terminal status is not confirmed yet, so only local scrape evidence is safe.`
 - `[deep-search] inquiry "为什么 valid ↑ 不预测 LB ↑？", mode=local-only — prior local evidence is expected to be sufficient.`
-- `[deep-search] precheck "ExpA add layer-norm gating", mode=local-only — closed-axis evidence must be checked before any external search.`
+- `[deep-search] precheck "ExpA add layer-norm gating", mode=local-only — searching local axis evidence before optional external research.`
 
 If Gate A later proposes paper search, announce the transition before external retrieval: `[deep-search] Gate A, mode=local+external — local evidence is insufficient or contradicted.`
 

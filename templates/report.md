@@ -26,7 +26,7 @@
 
 ## Next Steps
 
-- Recommendation: `<GO|RISKY|BLOCKED|PROMOTE|KILL|NEEDS_RECHECK|ANSWER_ONLY>`
+- Recommendation: `<GO|NEEDS-JUSTIFICATION|REDUCED-PRIORITY|PROMOTE|KILL|NEEDS_RECHECK|ANSWER_ONLY>`
 - Gate A: `<OFF|ON accepted|ON declined>`
 - Gate C: `<OFF|ON deferred|ON prior diff written>`
 - Follow-up owner: `<user|Claude|Codex>`

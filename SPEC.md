@@ -14,7 +14,7 @@
 |---|---|---|
 | `postmortem <job_id>` | After an experiment run hits terminal state | Manual (later: auto via hook) |
 | `inquiry "<question>"` | Hunch / cross-experiment question | Manual |
-| `precheck "<proposed exp idea>"` | Before submitting a new experiment run | Manual |
+| `precheck "<proposed exp idea>"` | Evidence search for a proposed experiment direction | Manual |
 
 **Mandatory announcement rule**: every invocation, BEFORE doing tool calls, output one line stating:
 - Subcommand chosen
@@ -118,8 +118,8 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 4. Pull paper priors from `docs/paper_priors.md`: does any predict +EV or -EV for this proposal?
 5. Decision recommendation:
    - **GO** — axis open, paper +EV, no recent similar KILL
-   - **RISKY** — axis closed but mechanism arguably distinct; output suggested justification template
-   - **BLOCKED** — axis closed AND mechanism similar; output suggested "skip this, here's why" with reference
+   - **NEEDS-JUSTIFICATION** — limited prior evidence; proceed with explicit rationale
+   - **REDUCED-PRIORITY** — N prior attempts on this axis closed at lower scores. Doesn't mean the axis is dead, but you should: (a) confirm your variant is structurally different from prior failures (see citations), OR (b) combine with another axis that compensates for the prior failure mode, OR (c) deprioritize unless other axes are exhausted.
 6. Trigger Gate A only if proposed mechanism references a paper not in `paper_priors.md` AND user wants paper-grounded sanity check.
 7. Output: `docs/research/deep_search/<YYYYMMDD-HHMM>_precheck/report.md` + optional `experiment_meta_template.md` if GO.
 
@@ -189,7 +189,7 @@ name: deep-search
 description: |
   Project-local skill that turns experiment outcomes into knowledge updates.
   Three subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (validate a proposed experiment against closed axes). Uses your experiment platform exports + local
+  precheck (search prior evidence for a proposed experiment direction). Uses your experiment platform exports + local
   docs + memory; delegates external paper search to Codex via a 1-round challenge protocol and
   verifies citations with WebFetch. Surfaces major findings as plain-language chips to the user.
 allowed-tools:
@@ -240,7 +240,7 @@ allowed-tools:
 1. `/deep-search precheck "ExpA add layer-norm gating"` should:
    - Detect `gating` axis
    - Flag CLOSED-AXIS-HIT against `memory/feedback_gating_axis_closed.md` (if exists; otherwise note prior pattern from decision_log)
-   - Return `BLOCKED` recommendation with citations to ExpB and ExpC
+   - Return `REDUCED-PRIORITY` recommendation with citations to ExpB and ExpC
    - Produce report.md at the documented path
 2. `/deep-search inquiry "为什么 valid ↑ 不预测 LB ↑？"` should:
    - Pull at least 3 hits from decision_log.md and experiment_logs/

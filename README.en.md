@@ -29,9 +29,9 @@
 There is a recurring pain in competition / industrial ML workflows:
 
 - 🌫️ **Structurally identical KILLs get re-run** — that direction you killed 3 months ago gets renamed and burns another GPU-day
-- 📚 **Decision evidence is scattered across 5 files** — `decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / platform metric CSVs. Cross-checking by human memory is error-prone
+- 📚 **Decision evidence is scattered across 5 files** — `decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / platform metric CSVs. Cross-file retrieval and cross-checking are mentally taxing
 - 🔍 **Paper search burns tokens** — naive arXiv + Semantic Scholar pulls cost 30k+ tokens per query, and GPT may hallucinate non-existent papers
-- 🚧 **No pre-submission guardrail** — no automatic "has this axis been closed?" check before you spend a daily submission quota
+- 🧭 **No unified entry for new-direction research** — papers, notes, memory, and platform records are scattered, so judging one direction means manually stitching evidence together
 
 ### Before / After
 
@@ -65,7 +65,7 @@ Manual workflow (30 min):
 axis=gating → CLOSED-AXIS-HIT
 3/3 historical KILL (ExpB/ExpC/ExpD)
 Smoking gun: experiment_logs/exp_d.md:21
-Verdict: BLOCKED
+Verdict: REDUCED-PRIORITY — 3 prior attempts found at lower-weight scores, plus 5 papers suggesting alternative gating styles. Decision: yours.
 Report: docs/research/.../report.md
 ```
 
@@ -77,8 +77,8 @@ Report: docs/research/.../report.md
 
 ## ✨ Features
 
-- 🔬 **Three subcommands in one skill** — `postmortem` (post-job analysis) / `inquiry` (cross-experiment Q&A) / `precheck` (pre-submission guardrail)
-- 🛡️ **Gate A two-stage external search** — 1-round Codex challenge on angles → user picks via chips → every citation force-verified by WebFetch
+- 🔬 **Three subcommands in one skill** — `postmortem` (search retrospectively for what just happened + cross-link evidence) / `inquiry` (cross-experiment Q&A) / `precheck` (axis-evidence search before action)
+- 🔎 **Gate A two-stage external search** — 1-round Codex challenge on search angles → user picks via chips → every citation force-verified by WebFetch
 - 💬 **Gate C plain-language chips** — major findings surfaced as everyday-language chips before any prior update
 - 📐 **Token-safe retrieval** — 250k-row metric CSV goes through a helper wrapper, never directly Read
 - 📂 **Local-first / external opt-in** — defaults to repo-local 5 sources; external search needs explicit user authorization via chips
@@ -134,13 +134,13 @@ Claude Code loads skills at startup. After installation, open `/hooks` once in C
 
 ## 🚀 Usage
 
-### Basic: pre-submission guardrail
+### Basic: axis-evidence search
 
 ```
 /deep-search precheck "ExpA add layer-norm gating"
 ```
 
-Effect: in under a minute, get a report on whether the axis is already closed, what structurally-similar historical KILLs exist, and which `file:line` references back the conclusion.
+Effect: in under a minute, get a report summarizing prior evidence on the axis, structurally similar historical KILLs, and the `file:line` references behind the conclusion.
 
 ### Advanced: post-job postmortem
 
@@ -148,7 +148,7 @@ Effect: in under a minute, get a report on whether the axis is already closed, w
 /deep-search postmortem 98238
 ```
 
-Prerequisite: you have already scraped platform state via [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) or your equivalent platform CLI tool, and an illustrative `outputs/<platform>/jobs-summary.csv` exists.
+Prerequisite: your platform exposes a job summary file — see retrieval/data_sources.md for how to map it; an illustrative `outputs/<platform>/jobs-summary.csv` exists.
 
 ### Advanced: cross-experiment inquiry
 
@@ -164,14 +164,14 @@ Retrieves across `decision_log.md` + `experiment_logs/` + `memory/`. If local hi
 
 | Subcommand | Use case | Default mode | Gate A trigger |
 |---|---|---|---|
-| `postmortem <job_id>` | After a job finishes | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
+| `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
 | `inquiry "<question>"` | Cross-experiment Q&A | local-only | < 3 local hits |
-| `precheck "<new exp idea>"` | Before submission | local-only | Mechanism absent from `paper_priors.md` AND user wants paper-grounded check |
+| `precheck "<new exp idea>"` | search for prior evidence on a proposed direction | local-only | Mechanism absent from `paper_priors.md` AND user wants paper-grounded check |
 
 Every invocation outputs a **mandatory first announcement line**:
 
 ```
-[deep-search] precheck "ExpA ...", mode=local-only — gating axis closure check must precede any external search.
+[deep-search] precheck "ExpA ...", mode=local-only — searching local axis evidence before optional external research.
 ```
 
 ---
@@ -251,7 +251,7 @@ Every invocation outputs a **mandatory first announcement line**:
 ├── workflows/
 │   ├── postmortem.md          # post-job analysis steps
 │   ├── inquiry.md             # cross-experiment Q&A steps
-│   └── precheck.md            # pre-submission guardrail steps
+│   └── precheck.md            # evidence-search-before-action steps
 ├── gates/
 │   ├── gate_a_external_search.md   # external search + 1-round Codex cap
 │   └── gate_c_major_finding.md     # major-finding chips protocol
@@ -276,7 +276,7 @@ Every invocation outputs a **mandatory first announcement line**:
 <details>
 <summary><strong>Q: My project is not an ML competition / does not use a specific experiment platform. Can I use it?</strong></summary>
 
-Yes, but you'll need to edit `retrieval/data_sources.md` to map to your platform. The skill's core abstraction is "token-safe cross-source retrieval + citation verification". TAAC2026-CLI or equivalent platform CLI CSV paths are just one concrete instance — replace them with W&B / MLflow / Slurm sacct equivalents in your project.
+Yes, but you'll need to edit `retrieval/data_sources.md` to map to your platform. The skill's core abstraction is "token-safe cross-source retrieval + citation verification". If your platform exposes a job summary file — see `retrieval/data_sources.md` for how to map it — point the mapping at your W&B / MLflow / Slurm sacct equivalents.
 
 </details>
 
@@ -324,7 +324,7 @@ Only for conclusive verdicts. While a job is still running, `postmortem` marks t
 | Claude Code | 2.x |
 | Python | 3.10+ |
 | OS | Linux / macOS (Windows needs WSL or Git Bash for `sed`) |
-| Optional: TAAC2026-CLI or your equivalent platform CLI tool | any version |
+| Optional: your experiment-platform CLI or job-summary export | any version |
 | Optional: MediaCrawler | any version (for Phase 2) |
 
 ---
