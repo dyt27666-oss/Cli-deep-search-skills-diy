@@ -59,7 +59,7 @@ Load shared rules as needed:
 ## Operating Rules
 
 - Retrieval comes before synthesis. Act as a librarian, not an oracle.
-- Do not auto-commit. Write only output artifacts and optional `prior_updates.diff` for user review.
+- Do not auto-commit. BUT at the end of each invocation, surface a chip suggesting the user commit the new `docs/research/deep_search/<run_dir>/` outputs so colleagues can sync. Default policy: **deep-search outputs ARE committed** (paper summaries, analysis, postmortems, prior diff drafts go to git). Only raw arxiv PDFs / API caches / platform-side cookies stay outside repo.
 - Use repo-root absolute output paths in final references, especially under `<PROJECT_ROOT>/docs/research/deep_search/`.
 - Cite factual claims with `file:line` notation whenever the source is local.
 - If an expected source file is missing, state `not present, skipped` and continue with the remaining sources.
