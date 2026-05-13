@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Token-safe per-job metric summary for /deep-search.
+"""Token-safe per-run metric summary for /deep-search.
 
 Usage:
-    python scripts/_deep_search_metric_query.py <jobInternalId>
+    python scripts/_deep_search_metric_query.py <job-id> --metrics-path outputs/<platform>/all-metrics-long.csv
 
-Reads outputs/taiji-output/training/all-metrics-long.csv in a single pass and
-prints at most 20 summary rows: metric, chart, n, last_step, last_value, max_value.
+Reads the configured metrics CSV in a single pass and prints at most 20 summary
+rows: metric, chart, n, last_step, last_value, max_value.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import math
-import sys
+import os
 from pathlib import Path
 from typing import Dict, Tuple
 
 MAX_ROWS = 20
-METRICS_PATH = Path("outputs/taiji-output/training/all-metrics-long.csv")
+ILLUSTRATIVE_DEFAULT_PATH = "outputs/<platform>/all-metrics-long.csv"
 
 
 def _to_float(value: str) -> float:
@@ -40,23 +41,54 @@ def _fmt(value: float) -> str:
     return f"{value:.10g}"
 
 
-def main(argv: list[str]) -> int:
-    if len(argv) != 2 or argv[1] in {"-h", "--help"}:
-        print("usage: python scripts/_deep_search_metric_query.py <jobInternalId>", file=sys.stderr)
-        return 2
+def _parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Summarize metrics for one job/run without loading a large CSV into context.",
+        epilog=(
+            "Set --metrics-path or DEEP_SEARCH_METRICS_PATH. "
+            f"Example path: {ILLUSTRATIVE_DEFAULT_PATH}"
+        ),
+    )
+    parser.add_argument("job_id", help="Job/run identifier to filter, matched against job_id or platform-specific job identifier columns.")
+    parser.add_argument(
+        "--metrics-path",
+        default=os.environ.get("DEEP_SEARCH_METRICS_PATH"),
+        help="Path to the long-form metrics CSV. Falls back to DEEP_SEARCH_METRICS_PATH.",
+    )
+    return parser.parse_args(argv[1:])
 
-    job_internal_id = str(argv[1])
-    if not METRICS_PATH.exists():
-        print(f"metric\tchart\tn\tlast_step\tlast_value\tmax_value")
-        print(f"# metrics file not found: {METRICS_PATH}", file=sys.stderr)
+
+def main(argv: list[str]) -> int:
+    args = _parse_args(argv)
+    job_id = str(args.job_id)
+
+    if not args.metrics_path:
+        print("metric\tchart\tn\tlast_step\tlast_value\tmax_value")
+        print(
+            "# metrics path is not configured. Pass --metrics-path PATH or set "
+            "DEEP_SEARCH_METRICS_PATH. Example: "
+            f"{ILLUSTRATIVE_DEFAULT_PATH}",
+            file=os.sys.stderr,
+        )
+        return 1
+
+    metrics_path = Path(args.metrics_path)
+    if not metrics_path.exists():
+        print("metric\tchart\tn\tlast_step\tlast_value\tmax_value")
+        print(
+            f"# metrics file not found: {metrics_path}. Pass --metrics-path PATH or set "
+            "DEEP_SEARCH_METRICS_PATH to your exported metrics CSV.",
+            file=os.sys.stderr,
+        )
         return 1
 
     summaries: Dict[Tuple[str, str], dict] = {}
 
-    with METRICS_PATH.open("r", newline="") as fh:
+    with metrics_path.open("r", newline="") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            if str(row.get("jobInternalId", "")) != job_internal_id:
+            row_job_id = row.get("job_id") or row.get("run_id") or row.get("id", "")
+            if str(row_job_id) != job_id:
                 continue
 
             metric = row.get("metric") or "<unknown>"
@@ -95,4 +127,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv))
+    raise SystemExit(main(os.sys.argv))

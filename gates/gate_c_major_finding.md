@@ -1,6 +1,6 @@
 # Gate C — Major Finding Chips
 
-Purpose: surface major knowledge changes to the user in plain language and record only user-approved prior diffs.
+Purpose: surface major knowledge changes from a generic ML/research run to the user in plain language and record only user-approved prior diffs.
 
 ## Trigger Conditions
 

@@ -12,12 +12,12 @@ Beyond arXiv/Semantic Scholar (covered in `codex_collaboration.md`), the project
 
 **Protocol**:
 1. WebSearch with platform-qualified query, e.g.:
-   - `TAAC2026 KDD Cup 小红书`
-   - `site:xiaohongshu.com TAAC KDD pCVR`
-   - `腾讯广告算法大赛 2026 经验贴`
-   - `site:zhihu.com TAAC2026`
+   - `<your-project-keyword> 经验贴 小红书`
+   - `site:xiaohongshu.com <your-project-keyword> 经验贴`
+   - `<your-competition-or-project-keyword> 经验分享`
+   - `site:zhihu.com <your-project-keyword> 复盘`
 2. For each candidate URL (≤5):
-   - WebFetch the URL with a prompt like "extract the post body and top-3 comments, summarize what they say about TAAC2026 / pCVR / 架构 / 经验"
+   - WebFetch the URL with a prompt like "extract the post body and top-3 comments, summarize what they say about <your-project-keyword> / pipeline / 架构 / 经验"
    - If WebFetch returns a 403 / paywall / "请登录" wall → mark as `[behind-login: <url>]` and continue
 3. Synthesize: which sources gave actual content vs. which hit the wall.
 4. Output goes to `external_research.md` under the run's output dir, alongside any paper findings.

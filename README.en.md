@@ -29,7 +29,7 @@
 There is a recurring pain in competition / industrial ML workflows:
 
 - 🌫️ **Structurally identical KILLs get re-run** — that direction you killed 3 months ago gets renamed and burns another GPU-day
-- 📚 **Decision evidence is scattered across 5 files** — `decision_log.md` / `eval_Logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / platform metric CSVs. Cross-checking by human memory is error-prone
+- 📚 **Decision evidence is scattered across 5 files** — `decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / platform metric CSVs. Cross-checking by human memory is error-prone
 - 🔍 **Paper search burns tokens** — naive arXiv + Semantic Scholar pulls cost 30k+ tokens per query, and GPT may hallucinate non-existent papers
 - 🚧 **No pre-submission guardrail** — no automatic "has this axis been closed?" check before you spend a daily submission quota
 
@@ -46,7 +46,7 @@ There is a recurring pain in competition / industrial ML workflows:
 ```
 Manual workflow (30 min):
 1. grep decision_log.md
-2. dig through eval_Logs/
+2. dig through experiment_logs/
 3. remember memory/feedback_*
 4. unclear whether to search papers
 5. write a summary, citations from memory
@@ -59,12 +59,12 @@ Manual workflow (30 min):
 <td>
 
 ```
-/deep-search precheck "I-667 ..."  
+/deep-search precheck "ExpA add layer-norm gating"  
    ↓ (1 min, 6 parallel greps)
 [deep-search] precheck, mode=local-only
 axis=gating → CLOSED-AXIS-HIT
-3/3 historical KILL (I-624/I-639/I-661)
-Smoking gun: eval_Logs/i-661.md:21
+3/3 historical KILL (ExpB/ExpC/ExpD)
+Smoking gun: experiment_logs/exp_d.md:21
 Verdict: BLOCKED
 Report: docs/research/.../report.md
 ```
@@ -137,7 +137,7 @@ Claude Code loads skills at startup. After installation, open `/hooks` once in C
 ### Basic: pre-submission guardrail
 
 ```
-/deep-search precheck "I-667 add temporal-decay gating on attention output"
+/deep-search precheck "ExpA add layer-norm gating"
 ```
 
 Effect: in under a minute, get a report on whether the axis is already closed, what structurally-similar historical KILLs exist, and which `file:line` references back the conclusion.
@@ -148,7 +148,7 @@ Effect: in under a minute, get a report on whether the axis is already closed, w
 /deep-search postmortem 98238
 ```
 
-Prerequisite: you have already scraped platform state via [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) or equivalent, and `outputs/taiji-output/training/jobs-summary.csv` exists.
+Prerequisite: you have already scraped platform state via [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) or your equivalent platform CLI tool, and an illustrative `outputs/<platform>/jobs-summary.csv` exists.
 
 ### Advanced: cross-experiment inquiry
 
@@ -156,7 +156,7 @@ Prerequisite: you have already scraped platform state via [TAAC2026-CLI](https:/
 /deep-search inquiry "Why does valid AUC rise but LB AUC fall?"
 ```
 
-Retrieves across `decision_log.md` + `eval_Logs/` + `memory/`. If local hits ≥ 3, refuses external search; if insufficient, surfaces a chip asking for authorization.
+Retrieves across `decision_log.md` + `experiment_logs/` + `memory/`. If local hits ≥ 3, refuses external search; if insufficient, surfaces a chip asking for authorization.
 
 ---
 
@@ -164,14 +164,14 @@ Retrieves across `decision_log.md` + `eval_Logs/` + `memory/`. If local hits ≥
 
 | Subcommand | Use case | Default mode | Gate A trigger |
 |---|---|---|---|
-| `postmortem <jobInternalId>` | After a job finishes | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
+| `postmortem <job_id>` | After a job finishes | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
 | `inquiry "<question>"` | Cross-experiment Q&A | local-only | < 3 local hits |
 | `precheck "<new exp idea>"` | Before submission | local-only | Mechanism absent from `paper_priors.md` AND user wants paper-grounded check |
 
 Every invocation outputs a **mandatory first announcement line**:
 
 ```
-[deep-search] precheck "I-667 ...", mode=local-only — gating axis closure check must precede any external search.
+[deep-search] precheck "ExpA ...", mode=local-only — gating axis closure check must precede any external search.
 ```
 
 ---
@@ -194,7 +194,7 @@ Every invocation outputs a **mandatory first announcement line**:
        │  Local Retrieval (token-safe)         │
        │   • jobs-summary.csv                  │
        │   • decision_log.md (grep + tail)     │
-       │   • eval_Logs/*.md                    │
+       │   • experiment_logs/*.md                    │
        │   • memory/feedback_*.md (two paths)  │
        │   • paper_priors.md                   │
        └───────┬───────────────────────────────┘
@@ -274,9 +274,9 @@ Every invocation outputs a **mandatory first announcement line**:
 ## ❓ FAQ
 
 <details>
-<summary><strong>Q: My project isn't TAAC2026 / doesn't use Taiji. Can I use it?</strong></summary>
+<summary><strong>Q: My project is not an ML competition / does not use a specific experiment platform. Can I use it?</strong></summary>
 
-Yes, but you'll need to edit `retrieval/data_sources.md` to map to your platform. The skill's core abstraction is "token-safe cross-source retrieval + citation verification". The TAAC2026-CLI CSV paths are just one concrete instance — replace them with W&B / MLflow / Slurm sacct equivalents in your project.
+Yes, but you'll need to edit `retrieval/data_sources.md` to map to your platform. The skill's core abstraction is "token-safe cross-source retrieval + citation verification". TAAC2026-CLI or equivalent platform CLI CSV paths are just one concrete instance — replace them with W&B / MLflow / Slurm sacct equivalents in your project.
 
 </details>
 
@@ -324,7 +324,7 @@ Only for conclusive verdicts. While a job is still running, `postmortem` marks t
 | Claude Code | 2.x |
 | Python | 3.10+ |
 | OS | Linux / macOS (Windows needs WSL or Git Bash for `sed`) |
-| Optional: TAAC2026-CLI | any version |
+| Optional: TAAC2026-CLI or your equivalent platform CLI tool | any version |
 | Optional: MediaCrawler | any version (for Phase 2) |
 
 ---

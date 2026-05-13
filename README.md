@@ -29,7 +29,7 @@
 竞赛 / 工业 ML 工作流里有个反复出现的痛点：
 
 - 🌫️ **同结构 KILL 重做**——3 个月前因为 X 失败过的方向，今天换个名字又跑一遍，浪费 1 GPU-day
-- 📚 **决策证据散在 5 个文件**——`decision_log.md` / `eval_Logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / 平台 metric CSV，人脑跨文件交叉验证容易漏
+- 📚 **决策证据散在 5 个文件**——`decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / 平台 metric CSV，人脑跨文件交叉验证容易漏
 - 🔍 **新论文要 token 烧得心慌**——arXiv + Semantic Scholar 直接调用 30k+ token 一次，结果可能是 GPT 幻觉的不存在论文
 - 🚧 **实验前防呆缺位**——提交训练前没有"这个轴关闭过吗"的自动检查，submission quota 就这么浪费
 
@@ -46,11 +46,11 @@
 ```
 人工流程（30 分钟）：
 1. grep decision_log.md
-2. 翻 eval_Logs/ 找相关
+2. 翻 experiment_logs/ 找相关
 3. 想起来还有 memory/feedback_*
 4. 不确定要不要查论文
 5. 写一段总结，引用都靠回忆
-6. 提交训练 → 跟去年某个 KILL 同结构
+6. 提交训练 → 跟历史某个 KILL 同结构
    → 24h 后才发现
 ```
 
@@ -58,12 +58,12 @@
 <td>
 
 ```
-/deep-search precheck "I-667 ..."  
+/deep-search precheck "ExpA add layer-norm gating"  
    ↓ (1 min, 6 个 grep 自动并行)
 [deep-search] precheck, mode=local-only
 axis=gating → CLOSED-AXIS-HIT
-3/3 历史 KILL (I-624 / I-639 / I-661)
-铁证: eval_Logs/i-661.md:21
+3/3 历史 KILL (ExpB / ExpC / ExpD)
+铁证: experiment_logs/exp_d.md:21
 Verdict: BLOCKED
 报告: docs/research/.../report.md
 ```
@@ -136,7 +136,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 ### 基础：提交训练前防呆
 
 ```
-/deep-search precheck "I-667 add temporal-decay gating on attention output"
+/deep-search precheck "ExpA add layer-norm gating"
 ```
 
 效果：1 分钟内出 report，告诉你这个轴是否已关闭、有没有结构同源的历史 KILL、引用是哪几个 file:line。
@@ -147,7 +147,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 /deep-search postmortem 98238
 ```
 
-前提：你已经用 [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) 或同等工具 scrape 过平台状态，`outputs/taiji-output/training/jobs-summary.csv` 存在。
+前提：你已经用 [TAAC2026-CLI](https://github.com/ZhongKuang/TAAC2026-CLI) 或你的等效平台 CLI 工具 scrape 过平台状态，示例路径 `outputs/<platform>/jobs-summary.csv` 存在。
 
 ### 进阶：跨实验问答
 
@@ -155,7 +155,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 /deep-search inquiry "为什么 valid AUC 涨但 LB 跌？"
 ```
 
-跨 `decision_log.md` + `eval_Logs/` + `memory/` 检索，本地证据 ≥3 hits 时绝不外搜；不足时 chips 问你授权。
+跨 `decision_log.md` + `experiment_logs/` + `memory/` 检索，本地证据 ≥3 hits 时绝不外搜；不足时 chips 问你授权。
 
 ---
 
@@ -163,14 +163,14 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 
 | Subcommand | 触发场景 | 默认模式 | Gate A 触发条件 |
 |---|---|---|---|
-| `postmortem <jobInternalId>` | Job 跑完后复盘 | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
+| `postmortem <job_id>` | Job 跑完后复盘 | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
 | `inquiry "<问题>"` | 跨实验问答 | local-only | 本地命中 < 3 |
 | `precheck "<新实验描述>"` | 提交训练前 | local-only | 机制不在 `paper_priors.md` 且用户要论文核查 |
 
 每次调用 skill 都会**先输出一行 announcement**，明确选了哪个 subcommand、什么模式、为什么：
 
 ```
-[deep-search] precheck "I-667 ...", mode=local-only — gating axis closure check must precede any external search.
+[deep-search] precheck "ExpA ...", mode=local-only — gating axis closure check must precede any external search.
 ```
 
 ---
@@ -193,7 +193,7 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
        │  Local Retrieval (token-safe)         │
        │   • jobs-summary.csv                  │
        │   • decision_log.md (grep + tail)     │
-       │   • eval_Logs/*.md                    │
+       │   • experiment_logs/*.md                    │
        │   • memory/feedback_*.md (两路径)     │
        │   • paper_priors.md                   │
        └───────┬───────────────────────────────┘
@@ -272,9 +272,9 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 ## ❓ FAQ
 
 <details>
-<summary><strong>Q: 我的项目不是 TAAC2026 / 不用 Taiji 平台，能用吗？</strong></summary>
+<summary><strong>Q: 我的项目不是 ML 竞赛 / 不用某个特定实验平台，能用吗？</strong></summary>
 
-可以，但要改 `retrieval/data_sources.md` 里的数据源映射。Skill 的核心抽象是「跨多种证据源做 token-safe 检索 + 引用验证」，TAAC2026-CLI 的 CSV 路径只是一个具体实例。你的项目里换成 W&B / MLflow / Slurm sacct 的对应路径即可。
+可以，但要改 `retrieval/data_sources.md` 里的数据源映射。Skill 的核心抽象是「跨多种证据源做 token-safe 检索 + 引用验证」，TAAC2026-CLI 或等效平台 CLI 的 CSV 路径只是一个具体实例。你的项目里换成 W&B / MLflow / Slurm sacct 的对应路径即可。
 
 </details>
 
@@ -322,7 +322,7 @@ v0 是文档绑定，没接桥接代码。真要用 Phase 2，要你 (1) 单独 
 | Claude Code | 2.x |
 | Python | 3.10+ |
 | 操作系统 | Linux / macOS（Windows 下 sed 需用 WSL 或 Git Bash） |
-| 可选: TAAC2026-CLI | 任意版本 |
+| 可选: TAAC2026-CLI 或你的等效平台 CLI 工具 | 任意版本 |
 | 可选: MediaCrawler | 任意版本（Phase 2 时） |
 
 ---

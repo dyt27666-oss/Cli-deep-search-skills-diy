@@ -18,12 +18,12 @@ Use `local-only` initially. Switch to `local+external` only after Gate A is trig
    - Extract mechanism phrases, including Chinese terms such as `valid`, `LB`, `不预测`, `提升`, `下降`, `门控`, `校准`, `序列`, and `时间`.
 2. Local retrieval, in this order, stopping once at least five strong hits are collected.
    - Grep `<PROJECT_ROOT>/decision_log.md` for IDs and keywords.
-   - Grep `<PROJECT_ROOT>/eval_Logs/*.md` for IDs and keywords if present.
+   - Grep `<PROJECT_ROOT>/experiment_logs/*.md` for IDs and keywords if present.
    - Grep `<PROJECT_ROOT>/memory/feedback_*.md` for axis names if present.
    - Grep `<PROJECT_ROOT>/docs/paper_priors.md` for keywords if present.
-   - Grep `<PROJECT_ROOT>/outputs/taiji-output/training/jobs-summary.csv` by `name` or I-tag only; do not inspect heavy metric logs.
+   - Grep `<PROJECT_ROOT>/outputs/<platform>/jobs-summary.csv` by `name` or experiment tag only; do not inspect heavy metric logs.
 3. Decide Gate A.
-   - If fewer than three local hits across `decision_log.md`, `eval_Logs/`, `memory/`, and `docs/paper_priors.md`, use Gate A to ask whether to search externally.
+   - If fewer than three local hits across `decision_log.md`, `experiment_logs/`, `memory/`, and `docs/paper_priors.md`, use Gate A to ask whether to search externally.
    - If three or more local hits exist, do not trigger external search; proceed with local synthesis.
 4. Synthesize.
    - Write one paragraph answering the question.
@@ -37,4 +37,4 @@ Use `local-only` initially. Switch to `local+external` only after Gate A is trig
 
 ## Acceptance Coverage
 
-For `/deep-search inquiry "为什么 valid ↑ 不预测 LB ↑？"`, this workflow requires at least three local hits from `decision_log.md` and `eval_Logs/` if available, requires mentioning the documented `val ↑ / LB ↓` pattern (cite the running count from `docs/active_state.md` or `decision_log.md` at retrieval time — do not hardcode the count), and forbids external search when local evidence is sufficient.
+For `/deep-search inquiry "为什么 valid ↑ 不预测 LB ↑？"`, this workflow requires at least three local hits from `decision_log.md` and `experiment_logs/` if available, requires mentioning the documented `val ↑ / LB ↓` pattern (cite the current evidence from `docs/active_state.md` or `decision_log.md` at retrieval time — do not hardcode project-specific counts), and forbids external search when local evidence is sufficient.

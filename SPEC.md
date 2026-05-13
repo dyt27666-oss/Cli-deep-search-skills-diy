@@ -1,6 +1,6 @@
 # /deep-search Skill — Design SPEC
 
-> **Owner**: project (UniRec-KDDCup2026). Built to turn each Taiji experiment outcome into a defensible knowledge update without re-doing structurally-identical failures (the I-608 / I-635 mistake).
+> **Owner**: any ML / research project that maintains a decision log + paper priors + per-experiment notes. Built to turn each experiment outcome into a defensible knowledge update without re-doing structurally-identical failures.
 > **Author of SKILL.md files**: delegated to Codex via `/codex:rescue`. This SPEC is the contract.
 > **Frame of mind**: retrieval > synthesis. Skill is a librarian, not an oracle. Major calls always go to chips with plain-language framing.
 
@@ -12,9 +12,9 @@
 
 | Subcommand | Usage | Trigger |
 |---|---|---|
-| `postmortem <jobInternalId>` | After a Taiji job hits terminal state | Manual (later: auto via hook) |
+| `postmortem <job_id>` | After an experiment run hits terminal state | Manual (later: auto via hook) |
 | `inquiry "<question>"` | Hunch / cross-experiment question | Manual |
-| `precheck "<proposed exp idea>"` | Before submitting a new Taiji job | Manual |
+| `precheck "<proposed exp idea>"` | Before submitting a new experiment run | Manual |
 
 **Mandatory announcement rule**: every invocation, BEFORE doing tool calls, output one line stating:
 - Subcommand chosen
@@ -31,7 +31,7 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 
 **Trigger conditions** (any one matches → propose external):
 - `postmortem`: result is a PROMOTE (LB ≥ +0.003 over current SOTA), OR a surprise KILL (Mechanism not covered by `docs/paper_priors.md`), OR contradicts a Semantic prior
-- `inquiry`: local evidence < 3 hits across {decision_log, eval_Logs, memory, paper_priors}
+- `inquiry`: local evidence < 3 hits across {decision_log, experiment_logs, memory, paper_priors}
 - `precheck`: proposed mechanism not found in `docs/paper_priors.md` AND not in `docs/paper_analysis.md`
 
 **Protocol**:
@@ -43,7 +43,7 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
    - `header`: "Search angle"
    - `multiSelect: true`
    - First option labeled `<angle> (Recommended)`; remaining options follow; always include a "都不搜，仅靠本地" option last
-5. On user pick: invoke `/codex:rescue` with: "Deep search arXiv + Semantic Scholar for: <angles>. Return for each: paper title, authors, year, venue, arxiv URL, DOI, 2-sentence finding, relevance to UniRec-KDDCup2026's pCVR pipeline. Max 5 papers per angle."
+5. On user pick: invoke `/codex:rescue` with: "Deep search arXiv + Semantic Scholar for: <angles>. Return for each: paper title, authors, year, venue, arxiv URL, DOI, 2-sentence finding, relevance to your project's ML pipeline. Max 5 papers per angle."
 6. Verify EVERY citation Codex returns: WebFetch each arxiv URL, parse title from `<meta>`, confirm match. Bad citations → drop with note `[unverified: <reason>]`.
 7. Append verified findings to `external_research.md` under output dir.
 
@@ -67,21 +67,21 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 
 ## 3. Subcommand specs
 
-### 3.1 `/deep-search postmortem <jobInternalId>`
+### 3.1 `/deep-search postmortem <job_id>`
 
 **Steps**:
-1. Read `outputs/taiji-output/training/jobs-summary.csv`. If row not found → abort with "jobInternalId not in scrape; run `taac2026 scrape --all --job-internal-id <id> --direct` first".
+1. Read `outputs/<platform>/jobs-summary.csv`. If row not found → abort with "job_id not found in your platform export; refresh your job/run metadata first".
 2. If `status` not in `{SUCCEED, FAILED, KILLED, CANCELED, FINISHED, COMPLETED}` → mode = `pre-mortem` (curve-only).
-3. Token-safe metric pull: invoke `scripts/_deep_search_metric_query.py <jobInternalId>` (helper to be written) → returns `(metric, n, last_step, last_value, max_value)` rows, ≤20 rows.
-4. Pull eval result for this job: read `outputs/taiji-output/evaluation/evaluations/` and match by `mould_id` or `name` containing job tag.
+3. Token-safe metric pull: invoke `scripts/_deep_search_metric_query.py <job_id>` (helper to be written) → returns `(metric, n, last_step, last_value, max_value)` rows, ≤20 rows.
+4. Pull eval result for this job: read `outputs/<platform>/evaluation/` and match by `mould_id` or `name` containing job tag.
 5. Find experiment metadata:
    - `manifest.json` — find entry by job name (`name` field substring match)
-   - `experiments/I-*/meta.md` if exists
-   - `decision_log.md` last 200 lines, grep for the I-### tag
-   - `eval_Logs/i-###.md` if exists
+   - `experiments/<experiment-id>/meta.md` if exists
+   - `decision_log.md` last 200 lines, grep for the ExpX tag
+   - `experiment_logs/<experiment-id>.md` if exists
 6. Find structurally similar past experiments:
    - Same axis (decode from `tags` and `ablation_removes` in manifest)
-   - Similar val-vs-LB delta pattern; the project has documented "val ↑ / LB ↓" 10/10 times — calling that out is high-signal
+   - Similar val-vs-LB delta pattern; the project has documented a repeated "val ↑ / LB ↓" pattern — calling that out is high-signal
 7. Cross-check priors:
    - `docs/paper_priors.md` — does any prior predict this outcome?
    - `docs/domain_hints.md` Semantic layer
@@ -89,21 +89,21 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 8. Trigger Gate A check; if ON, run protocol
 9. Trigger Gate C check; if ON, run protocol
 10. Write outputs:
-    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_I-###/report.md`
-    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_I-###/prior_updates.diff` (optional)
-    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_I-###/external_research.md` (optional)
+    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_<experiment-id>/report.md`
+    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_<experiment-id>/prior_updates.diff` (optional)
+    - `docs/research/deep_search/<YYYYMMDD-HHMM>_postmortem_<experiment-id>/external_research.md` (optional)
 11. Final message: a 5-line summary + paths.
 
 ### 3.2 `/deep-search inquiry "<question>"`
 
 **Steps**:
-1. Parse question for keywords: experiment IDs (`I-\d+`), axis names ({gating, calibration, focal, sequence, item-id, time-feature, architecture, ...}), mechanism phrases.
+1. Parse question for keywords: experiment IDs (for example `ExpA`, `EXP-123`, or your platform IDs), axis names ({gating, calibration, focal, sequence, item-id, time-feature, architecture, ...}), mechanism phrases.
 2. Local retrieval (in order, stop when ≥5 hits):
    - grep `decision_log.md` for IDs and keywords
-   - grep `eval_Logs/*.md` for IDs and keywords
+   - grep `experiment_logs/*.md` for IDs and keywords
    - grep `memory/feedback_*.md` for axis names
    - grep `docs/paper_priors.md` for keywords
-   - grep `outputs/taiji-output/training/jobs-summary.csv` `name` column
+   - grep `outputs/<platform>/jobs-summary.csv` `name` column
 3. If hits < 3 → Gate A chip "证据不足，搜外部？"; else proceed.
 4. Synthesize: a one-paragraph answer + bulleted citations (file:line for each claim).
 5. Trigger Gate C only if answer reveals a previously-undocumented mechanism.
@@ -128,16 +128,16 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 ## 4. Token-safe retrieval rules (HARD RULES)
 
 **Never directly Read or grep these paths**:
-- `outputs/taiji-output/training/all-metrics-long.csv` (250k+ rows)
-- `outputs/taiji-output/training/logs/<jobId>/*.txt`
-- `outputs/taiji-output/training/code/<jobId>/files/*` (unless user explicitly asks for a specific file)
+- `outputs/<platform>/all-metrics-long.csv` (250k+ rows)
+- `outputs/<platform>/logs/<job-id>/*.txt`
+- `outputs/<platform>/code/<job-id>/files/*` (unless user explicitly asks for a specific file)
 
 **Always use**:
-- `outputs/taiji-output/training/jobs-summary.csv` (≤50 rows usually)
-- `outputs/taiji-output/training/all-checkpoints.csv` (≤200 rows)
-- `outputs/taiji-output/evaluation/evaluations/` (already trimmed)
-- Per-job metrics: `python scripts/_deep_search_metric_query.py <jobInternalId>` (helper, output ≤20 rows). Helper to be written by Codex.
-- Per-job log errors: `taac2026 logs <jobId>` (extracts Errors/Tracebacks only)
+- `outputs/<platform>/jobs-summary.csv` (≤50 rows usually)
+- `outputs/<platform>/all-checkpoints.csv` (≤200 rows)
+- `outputs/<platform>/evaluation/` (already trimmed)
+- Per-job metrics: `python scripts/_deep_search_metric_query.py <job_id>` (helper, output ≤20 rows). Helper to be written by Codex.
+- Per-job log errors: use your platform CLI or log-export tool to extract Errors/Tracebacks only
 
 **Project conventions to honor**:
 - Don't auto-commit (per CLAUDE.md «Git Rules»)
@@ -173,9 +173,9 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 Also produce:
 ```
 scripts/_deep_search_metric_query.py  # token-safe metric query helper
-                                       # usage: python scripts/_deep_search_metric_query.py <jobInternalId>
+                                       # usage: python scripts/_deep_search_metric_query.py <job_id>
                                        # output: table rows (metric, chart, n, last_step, last_value, max_value)
-                                       # reads outputs/taiji-output/training/all-metrics-long.csv with a single-pass filter
+                                       # reads outputs/<platform>/all-metrics-long.csv with a single-pass filter
 .gitignore                              # add `docs/research/deep_search/` line if not present
 ```
 
@@ -187,9 +187,9 @@ scripts/_deep_search_metric_query.py  # token-safe metric query helper
 ---
 name: deep-search
 description: |
-  Project-local skill that turns Taiji experiment outcomes into knowledge updates.
+  Project-local skill that turns experiment outcomes into knowledge updates.
   Three subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (validate a proposed experiment against closed axes). Uses TAAC2026-CLI outputs + local
+  precheck (validate a proposed experiment against closed axes). Uses your experiment platform exports + local
   docs + memory; delegates external paper search to Codex via a 1-round challenge protocol and
   verifies citations with WebFetch. Surfaces major findings as plain-language chips to the user.
 allowed-tools:
@@ -230,21 +230,21 @@ allowed-tools:
 
 - Don't bake in arxiv/Semantic-Scholar HTTP calls inside the skill — delegate to Codex via `/codex:rescue`.
 - Don't try to auto-promote priors. Promotion is a user decision via Gate C.
-- Don't add a "watch jobs" mode — that's the Monitor's job, see `bofpbm3gi`.
+- Don't add a "watch jobs" mode — that belongs in a separate monitoring tool.
 - Don't write hooks. Hooks are out of scope for v0.
 
 ---
 
 ## 9. Acceptance test (Claude will run this after Codex delivers)
 
-1. `/deep-search precheck "I-667 add temporal-decay gating on attention output"` should:
+1. `/deep-search precheck "ExpA add layer-norm gating"` should:
    - Detect `gating` axis
    - Flag CLOSED-AXIS-HIT against `memory/feedback_gating_axis_closed.md` (if exists; otherwise note prior pattern from decision_log)
-   - Return `BLOCKED` recommendation with citations to I-624 and I-639
+   - Return `BLOCKED` recommendation with citations to ExpB and ExpC
    - Produce report.md at the documented path
 2. `/deep-search inquiry "为什么 valid ↑ 不预测 LB ↑？"` should:
-   - Pull at least 3 hits from decision_log.md and eval_Logs/
-   - Mention the 10/10 pattern
+   - Pull at least 3 hits from decision_log.md and experiment_logs/
+   - Mention the repeated pattern
    - NOT trigger external search (sufficient local evidence)
 3. `/deep-search postmortem 98238` (when terminal) should:
    - Read jobs-summary.csv for the row

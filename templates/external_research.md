@@ -14,7 +14,7 @@
 - DOI: `<doi or none>`
 - Verification: `PASS — fetched title matches`
 - Finding: `<two-sentence summary>`
-- Relevance to UniRec-KDDCup2026 pCVR pipeline: `<specific relevance>`
+- Relevance to your pipeline: `<specific relevance>`
 
 ## Unverified / Dropped Citations
 

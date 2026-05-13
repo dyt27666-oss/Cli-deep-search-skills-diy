@@ -1,9 +1,9 @@
 ---
 name: deep-search
 description: |
-  Project-local skill that turns Taiji experiment outcomes into knowledge updates.
+  Project-local skill that turns experiment outcomes into knowledge updates.
   Three subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (validate a proposed experiment against closed axes). Uses TAAC2026-CLI outputs + local
+  precheck (validate a proposed experiment against closed axes). Uses your experiment platform exports + local
   docs + memory; delegates external paper search to Codex via a 1-round challenge protocol and
   verifies citations with WebFetch. Surfaces major findings as plain-language chips to the user.
 allowed-tools:
@@ -22,7 +22,7 @@ allowed-tools:
 
 # /deep-search
 
-Use this project-local skill when the user invokes `/deep-search <subcommand> [args]` to turn Taiji experiment evidence into a defensible knowledge update.
+Use this project-local skill when the user invokes `/deep-search <subcommand> [args]` to turn experiment evidence into a defensible knowledge update.
 
 ## First Output: Mandatory Announcement
 
@@ -34,7 +34,7 @@ Examples:
 
 - `[deep-search] postmortem 98238, mode=local-only — terminal status is not confirmed yet, so only local scrape evidence is safe.`
 - `[deep-search] inquiry "为什么 valid ↑ 不预测 LB ↑？", mode=local-only — prior local evidence is expected to be sufficient.`
-- `[deep-search] precheck "I-667 add temporal-decay gating on attention output", mode=local-only — closed-axis evidence must be checked before any external search.`
+- `[deep-search] precheck "ExpA add layer-norm gating", mode=local-only — closed-axis evidence must be checked before any external search.`
 
 If Gate A later proposes paper search, announce the transition before external retrieval: `[deep-search] Gate A, mode=local+external — local evidence is insufficient or contradicted.`
 
@@ -42,7 +42,7 @@ If Gate A targets a community platform (XHS / Zhihu / B站 etc.) instead of pape
 
 ## Dispatch
 
-- For `/deep-search postmortem <jobInternalId>`, follow `workflows/postmortem.md`.
+- For `/deep-search postmortem <job_id>`, follow `workflows/postmortem.md`.
 - For `/deep-search inquiry "<question>"`, follow `workflows/inquiry.md`.
 - For `/deep-search precheck "<proposed exp idea>"`, follow `workflows/precheck.md`.
 

@@ -18,7 +18,7 @@ Rules:
 
 After the user selects angles with chips, invoke `/codex:rescue` with:
 
-`Deep search arXiv + Semantic Scholar for: <angles>. Return for each: paper title, authors, year, venue, arxiv URL, DOI, 2-sentence finding, relevance to UniRec-KDDCup2026's pCVR pipeline. Max 5 papers per angle.`
+`Deep search arXiv + Semantic Scholar for: <angles>. Return for each: paper title, authors, year, venue, arxiv URL, DOI, 2-sentence finding, relevance to your project's ML pipeline. Max 5 papers per angle.`
 
 Do not make inline arXiv or Semantic Scholar API calls from the skill itself.
 

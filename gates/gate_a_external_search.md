@@ -9,7 +9,7 @@ Trigger Gate A when any condition is true:
 - `postmortem`: the result is a PROMOTE with LB lift at least `+0.003` over current SOTA.
 - `postmortem`: the result is a surprise KILL whose mechanism is not covered by `<PROJECT_ROOT>/docs/paper_priors.md`.
 - `postmortem`: the result contradicts a Semantic prior in `<PROJECT_ROOT>/docs/domain_hints.md`.
-- `inquiry`: local evidence has fewer than three hits across `decision_log.md`, `eval_Logs/`, `memory/`, and `docs/paper_priors.md`.
+- `inquiry`: local evidence has fewer than three hits across `decision_log.md`, `experiment_logs/`, `memory/`, and `docs/paper_priors.md`.
 - `precheck`: the proposed mechanism is not found in `docs/paper_priors.md` and not found in `docs/paper_analysis.md`.
 
 If none applies, write `Gate A: OFF — sufficient local evidence` in the report.
