@@ -34,10 +34,37 @@ Recency requirements vary by topic. The skill MUST set an explicit year floor be
 
 **If the topic doesn't fit any row**: default to `current_year - 2`. Announce the choice explicitly in the report and in the Codex prompt.
 
-**Surface to user**:
-- Every Gate A AskUserQuestion option label MUST include the year floor as an explicit tag, e.g. `"LLM/text-encoder as item backbone; ≥2025; …"`.
-- Every Codex deep-search prompt MUST repeat the year floor in plain language (not just in the angle string), with the rationale: `"Year filter: ≥2025 only (today is YYYY-MM-DD, anything pre-2025 is stale for this topic)."`
-- If the user overrides the floor (e.g., "use ≥2024 instead"), re-issue Gate A chips with the new floor; do NOT silently accept.
+**Confirm year floor with the user — MANDATORY chip BEFORE drafting angles**:
+
+The defaults above are starting points, NOT final values. Always surface a chip asking the user to confirm or override the floor before any angle work begins:
+
+```
+AskUserQuestion(
+  question="Year floor for external paper search?",
+  header="Year floor",
+  multiSelect=false,
+  options=[
+    {label: "≥<default> (default for this topic) (Recommended)",
+     description: "Computed from topic-type defaults. Current_year=<YYYY>, topic=<topic class>."},
+    {label: "≥<default+1>",
+     description: "Stricter — only the very newest papers."},
+    {label: "≥<default-1>",
+     description: "Looser — include slightly older but still industrially relevant work."},
+    {label: "≥<5+ years older, e.g. classical>",
+     description: "For theoretical / foundational papers where age matters less."}
+  ]
+)
+```
+
+Reasoning behind the mandatory chip:
+- Defaults compress a multi-dimensional decision (topic + risk tolerance + time pressure + literature density) into one heuristic. User may have context the skill doesn't.
+- Skipping this confirmation has empirically wasted at least one search round in this project's history — defaults gave "2024+" when the user wanted strictly "≥2026", forcing a re-search.
+- The chip is cheap (one round trip); the cost of guessing wrong is one wasted Codex call + the user's correction time.
+
+**Surface to user in option labels and Codex prompts**:
+- Every Gate A "pick search angle" AskUserQuestion option label MUST include the year floor as an explicit tag, e.g. `"LLM/text-encoder as item backbone; ≥2025; …"`.
+- Every Codex deep-search prompt MUST repeat the year floor in plain language (not just in the angle string), with the rationale: `"Year filter: ≥<year_floor> only (today is YYYY-MM-DD, anything pre-<year_floor> is stale for this topic)."`
+- If the user overrides the floor mid-conversation (e.g., "use ≥2024 instead"), re-issue Gate A chips with the new floor; do NOT silently accept.
 
 **Examples (assume `current_year = 2026`)**:
 - Industrial CTR text-encoder paper: `≥2025`
@@ -76,7 +103,7 @@ Recency requirements vary by topic. The skill MUST set an explicit year floor be
 ## Protocol
 
 1. **Pre-Gate-A**: read constraint sources above; extract verbatim constraint clauses; if any clause directly prohibits the search target (e.g., "no text" while the question implies text-based solutions), narrow the question with the user via chips before continuing.
-2. **Year floor**: per Year Freshness Rule above, compute and announce the year floor.
+2. **Year floor — compute then CONFIRM**: per Year Freshness Rule above, compute the default year floor by topic type; then **surface the mandatory year-floor chip to the user** before drafting any angle. Wait for user confirmation/override before proceeding.
 3. Draft two or three candidate search angles.
    - Format each angle as `<keyword>; ≥<year_floor>; <venue filter>; expected evidence type`.
    - **Every angle MUST already incorporate the Pre-Gate-A constraints**. Example: if data is anonymized-int-only, angle becomes `dense item representation from anonymized integer features (NO text), ≥2025` not just `cold-item architecture, ≥2025`.
