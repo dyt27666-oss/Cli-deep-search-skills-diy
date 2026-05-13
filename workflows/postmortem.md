@@ -57,6 +57,24 @@ Use `local-only` initially. Switch to `local+external` only after Gate A is trig
     - Gate C status.
     - Absolute output paths.
 
+## Platform Eval Quota — Verify Before Assuming
+
+Before assuming a failed eval burns daily quota, **check empirically once on your platform**. Most experiment-platforms charge quota on successful run only (FAILED evals do not count). If your platform behaves this way:
+
+- After `status=failed`, scrape event log immediately, diagnose root cause from `logs/<task_id>.txt`, retry **same-day without quota concern**.
+- This applies to **infrastructure / packaging failures** (missing module, OOM, upload mismatch). It is NOT permission to brute-force a mechanism that's actually broken — fix the root cause first, then retry.
+- A failed eval still occupies its compute slot for the duration of `running` state. Don't queue parallel retries before the failed one releases.
+
+If your platform DOES charge quota on failed evals: be far more conservative; treat the first attempt as the only attempt and do a dry-run / lint of upload contents first.
+
+## Default Infer File Set — Beware Hidden Whitelists
+
+Most platform CLI tools have a hardcoded default whitelist for "what gets uploaded as inference code" (typically: `dataset.py, dense_transform.py, eda.py, infer.py, model.py` or similar). **If your inference path imports anything outside this set** (custom utility modules, feature-artifact loaders, etc.), the eval will fail with `ModuleNotFoundError: No module named '<module>'` on the first inference step.
+
+Mitigation:
+- Stage a clean directory containing ALL needed files, then use the CLI's "include all" mode (often `--include-all-files` or `--submit-name <name>` mode resolving a curated package dir).
+- Before live `eval create`, scan your `infer.py` and `dataset.py` for `from <local_module> import` lines and ensure each is in the upload set.
+
 ## Acceptance Coverage
 
 For `/deep-search postmortem 98238` when terminal, this workflow requires reading `jobs-summary.csv`, invoking `_deep_search_metric_query.py 98238`, producing `report.md`, and triggering Gate C chips if LB exceeds current SOTA by at least `+0.003`.
