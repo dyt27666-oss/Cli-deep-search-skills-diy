@@ -1,0 +1,14 @@
+# Output directory of the skill itself (created at runtime in the consumer project)
+docs/research/deep_search/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store

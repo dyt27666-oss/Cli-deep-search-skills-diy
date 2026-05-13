@@ -1,0 +1,11 @@
+# Proposed prior update diff
+# This is a review stub. Do not apply automatically and do not commit without user approval.
+
+--- a/<target-prior-file>
++++ b/<target-prior-file>
+@@
++<proposed prior line>
++
++# Evidence:
++# - <file:line local citation>
++# - <verified external citation if any>
