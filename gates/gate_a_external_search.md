@@ -56,6 +56,12 @@ Recency requirements vary by topic. The skill MUST set an explicit year floor be
    - Current SOTA score, gap to target, fork base
 3. **Closed-axis registry** (`<PROJECT_ROOT>/docs/active_state.md` + `<USER_AUTO_MEMORY>/feedback_*axis_closed*.md`)
 4. **Data EDA summary** (e.g., `<PROJECT_ROOT>/docs/data_eda_summary.md`, `data_understanding_*.md`)
+5. **Empirical failure modes** — past-experiment-derived structural rules that limit what KIND of solution can work, even if no rule explicitly forbids it. Examples that have bitten this project:
+   - "Any learned id-dependent representation (user OR item) fails to transfer because train/test ids barely overlap" → implicitly closes ALL `*-id pretraining`, `*-id SSL`, `*-id cross` mechanisms even if those mechanisms have never been explicitly KILLed
+   - "Loss-axis improvements over BCE don't transfer because the optimization target binds to train-period correlations" → implicitly closes ALL ranking-style losses
+   - "Valid AUC delta < some-σ has zero predictive power for LB direction" → eliminates valid-based experiment stopping
+   - Look for these in `<PROJECT_ROOT>/docs/active_state.md` "iron rule" / "root cause" passages and in postmortem reports
+   - **Include failure modes as VERBATIM clauses too** — they're not rules but they constrain the solution space identically
 
 **For each constraint found, paste it VERBATIM (not summarized) into the Codex search prompt.** Summarization loses fidelity — the exact wording often matters for whether a paper's method applies.
 
