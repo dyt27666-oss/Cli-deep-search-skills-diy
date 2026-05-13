@@ -71,6 +71,15 @@ Reasoning behind the mandatory chip:
 - Domain-adaptation methodology: `≥2024`
 - Information-bottleneck theory: `≥2021`
 
+## Path Selection: arxiv MCP preferred → Codex fallback
+
+**Before drafting angles**, check whether `mcp__arxiv-mcp-server__*` tools are available in this session (look at the available-skills / tools list).
+
+- **If yes (PREFERRED)**: use the arxiv MCP for both challenge and search. No Codex needed. No WebFetch verification needed (MCP returns arXiv-official metadata). Year floor still applied as a filter at the source.
+- **If no (FALLBACK)**: use the Codex challenge + Codex search + WebFetch verification path documented below in steps 4 and 8.
+
+Detailed protocol in `retrieval/codex_collaboration.md`.
+
 ## Pre-Gate-A: Read Project Constraints (MANDATORY)
 
 **Before drafting search angles, the skill MUST read the project's hard-constraint sources** so the search isn't framed against constraints that prohibit the result.

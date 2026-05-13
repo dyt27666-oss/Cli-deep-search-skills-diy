@@ -90,9 +90,21 @@ Verdict: 降权 —— 同轴已 3 次尝试低分，但不代表方向失活。
 
 ### 前置条件
 
+**必须**：
 - Claude Code 2.x
-- Python 3.10+
+- Python 3.10+ + `uv` ([安装指南](https://github.com/astral-sh/uv))
 - 一个 ML 实验/竞赛项目（有 `decision_log.md` 之类的项目文档惯例）
+
+**强烈推荐（Gate A 外部论文搜索的主路径）**：
+- **arxiv-mcp-server** —— 装好后 Gate A 走 MCP 直接查 arXiv，**不依赖 Codex 额度**：
+  ```bash
+  uv tool install arxiv-mcp-server
+  claude mcp add arxiv-mcp-server uvx arxiv-mcp-server
+  ```
+  装好后开新 Claude Code session（或 `/reload-plugins`），`mcp__arxiv-mcp-server__*` 工具会自动可用。Skill 会优先用 MCP；MCP 不可用时降级到 Codex + WebSearch。
+
+**可选（Phase 2 社群平台抓取）**：
+- MediaCrawler ([安装](https://github.com/NanmiCoder/MediaCrawler)) + playwright + Chromium。详见 `retrieval/external_sources.md`。
 
 ### 一键安装
 
