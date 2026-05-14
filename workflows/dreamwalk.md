@@ -41,7 +41,21 @@ If the user is still iterating within known axes, use `precheck`. Only fall to `
 
 3. **Optional: parallel narrow-axis Codex** if user wants both breadth and depth. Dispatch a second Codex task that targets ONE specific mechanism family for 2026 evolution — useful when user names "the 2025 champion's axis X, find its 2026 successors". Run side-by-side with the wide dreamwalk.
 
-4. **Wait** for Codex output. Dreamwalk Codex tasks typically take 10-25 minutes due to multi-axis arxiv searching. **Do not poll** — let bg notification arrive.
+   **MANDATORY brief additions for every Codex dreamwalk dispatch** (the 2026-05-14 stuck-task post-mortem made these load-bearing):
+
+   - **Hard time budget = 25 minutes wall clock.** If exceeded, Codex MUST write whatever it has so far and exit. The brief must say verbatim: *"If you have not finished by minute 25, stop searching and write your current paper list to `papers.md` with a `## STATUS: PARTIAL_AT_25MIN` header. Do NOT keep going past 25 minutes regardless of completeness."*
+
+   - **Incremental checkpoint writes.** The brief must instruct: *"After each paper you verify (arXiv abstract fetched, fit assessed), APPEND it to `papers.md` immediately. Do not batch all 8-12 papers to the end. If you crash or are killed mid-task, the partial file must contain the verified papers so far."* Use a `## Verified Papers` section that grows incrementally, plus a `## In-Progress` section with the paper currently being researched (so the resume step knows where to continue).
+
+   - **Resume awareness.** The brief must instruct: *"BEFORE searching, READ `papers.md` if it exists. Skip any arXiv IDs already in the `## Verified Papers` section. If you find a `## In-Progress` entry, treat it as your starting point. Append rather than overwrite."*
+
+   - **5-minute progress pings.** The brief must instruct: *"Every 5 minutes of wall-clock, append a one-line status to `progress.log` in the same dir: `[HH:MM] phase=<arxiv-search | abstract-fetch | composing> papers_verified=<N> currently=<arxiv_id or 'idle'>`. This is how the human (or Claude) detects stalls without reading the JSONL transcript."*
+
+   - **Mandatory file write at exit.** The brief must end with: *"FINAL ACTION (non-negotiable, regardless of completion state): write `papers.md` to disk. If you skipped this in your final response, the run is considered failed."*
+
+4. **Wait** for Codex output, but **arm a 30-minute kill timer on dispatch**. Codex dreamwalk tasks should complete in 10-25 min; if `papers.md` is still missing at minute 30 OR `progress.log`'s last entry is older than 7 minutes (= 1.5 ping cycles), the task is stuck and must be killed via `codex-companion.mjs cancel <job-id>`. Then re-dispatch — the new task picks up partial papers.md via the resume rule.
+
+   **Use Monitor or a periodic poll** (10 min) on `progress.log` mtime + `papers.md` existence. Do NOT rely on the Codex bg launcher notification — past sessions confirmed it fires only when the launcher forwards the task, not when the underlying paper hunt completes.
 
 5. **Triage the returned papers** against project constraints **before showing to user**:
    - Auto-reject: papers requiring text/image/multimodal data, papers requiring multi-task labels we don't have, papers requiring features we lack
@@ -60,8 +74,9 @@ Directory: `docs/research/deep_search/<YYYYMMDD-HHMM>_dreamwalk/`
 
 Required files:
 - `dreamwalk_brief.md` — the Codex brief verbatim (for reproducibility)
-- `paper_candidates.md` — Codex's raw paper list + your triage table
-- `recommendation.md` — top 2-3 candidates with priority ranking + rationale
+- `papers.md` — Codex writes this incrementally: `## Verified Papers` (one per arXiv ID, appended live) + `## In-Progress` (current arXiv being researched) + `## STATUS` header (one of: `RUNNING`, `PARTIAL_AT_25MIN`, `COMPLETE`, `STUCK_ABORTED`)
+- `progress.log` — Codex appends a one-line ping every 5 min: `[HH:MM] phase=<x> papers_verified=<N> currently=<arxiv_id or 'idle'>`. Used by Claude to detect stalls.
+- `recommendation.md` — top 2-3 candidates with priority ranking + rationale (written by Claude after dreamwalk completes, NOT by Codex)
 
 Optional: `external_research.md` if WebFetch verification of any specific arXiv ID was needed (the Codex companion already does this internally; only re-fetch when a paper looks borderline).
 
@@ -80,6 +95,8 @@ Optional: `external_research.md` if WebFetch verification of any specific arXiv 
 | All papers fail the data-schema check | Multimodal bias in 2026 corpus | Add "we have ONLY anonymized integer IDs + dense floats" to brief; re-dispatch |
 | All papers require backbone replacement | High-impact papers tend to be backbone-changing | Mark them all "🔴 high risk" and explicitly chip user on architectural risk tolerance |
 | Papers fit but expected lift is below user's quota threshold | Sub-threshold candidates | Honest report; explicitly tell user "no candidate above your +0.0005 threshold" rather than pad |
+| **Codex bg task runs > 30 min without writing `papers.md`** | `papers.md` missing or 0 bytes; `progress.log` last entry > 7 min stale; `codex-companion.mjs status --all` shows `elapsed > 30m` | **(Post-2026-05-14 stuck-tasks lesson)** Cancel the job via `codex-companion.mjs cancel <task-id>`. Read `papers.md` partial content if any. Re-dispatch with the **same** target paths — resume rule + checkpoint writes preserve what was verified. Common root cause = Codex stuck in arXiv PDF parsing on a paywalled or malformed PDF. |
+| **Multiple zombie tasks accumulate in broker** | `codex-companion.mjs status --all` shows N running but no actual file growth | Cancel all zombies before re-dispatching. Past sessions found tasks "running" for hours after their work actually completed but the broker wasn't notified. |
 
 ## Relation to other workflows
 
