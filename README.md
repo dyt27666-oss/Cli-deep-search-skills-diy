@@ -18,9 +18,13 @@
   <img src="https://img.shields.io/badge/type-Skill-f59e0b.svg" alt="Type: Skill">
 </p>
 
-<p>一个 Claude Code 项目本地 skill · <code>/deep-search</code> 三 subcommand · 自动从 5 个数据源捞证据 · GPT 论文幻觉自动核查 · 永不自动 commit</p>
+<p>一个 Claude Code 项目本地 skill · <code>/deep-search</code> 四 subcommand（postmortem · inquiry · precheck · <strong>dreamwalk</strong>）· 自动从 5 个数据源捞证据 · GPT 论文幻觉自动核查 · 永不自动 commit</p>
 
 </div>
+
+---
+
+> 🆕 **2026-05 新增** ：第四个 subcommand `dreamwalk` —— 项目卡顿时主动**远离当前 focus** 的宽搜，把 CLOSED + PROMOTED 轴当**排除项**喂给 Codex，要 8-12 篇 2026 paper 覆盖 5+ 机制族。适用于"已知轴 +EV 压榨到 +0.0005 量级，需要找跨度更大的方向"。详见 [workflows/dreamwalk.md](./workflows/dreamwalk.md)。
 
 ---
 
@@ -32,6 +36,7 @@
 - 📚 **决策证据散在 5 个文件**——`decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / 平台 metric CSV，跨文件检索和交叉验证很耗心力
 - 🔍 **新论文要 token 烧得心慌**——arXiv + Semantic Scholar 直接调用 30k+ token 一次，结果可能是 GPT 幻觉的不存在论文
 - 🧭 **新方向调研没有统一入口**——论文、笔记、memory、平台记录分散在各处，想判断一个方向要来回翻证据
+- 🪤 **已知轴 +EV 见顶**——经验 +0.005 → +0.001 → +0.0005，每加一层都更费力，但不知道"下一个跨度方向"在哪
 
 ### 效果对比
 
@@ -66,6 +71,48 @@ axis=gating → CLOSED-AXIS-HIT
 铁证: experiment_logs/exp_d.md:21
 Verdict: 降权 —— 同轴已 3 次尝试低分，但不代表方向失活。建议 (a) 确认本次设计与历史失败结构不同（见引用）；(b) 与其他轴组合，可能改写失败机制；(c) 在其他轴未尽前先排到后面。另有 5 篇论文提示可尝试替代 gating 风格。Decision: yours.
 报告: docs/research/.../report.md
+```
+
+</td>
+</tr>
+</table>
+
+### 🆕 dreamwalk —— 项目卡顿时跨轴找新机制族
+
+<table>
+<tr>
+<th align="left">😩 卡在已知轴上</th>
+<th align="left">✨ /deep-search dreamwalk 的效果</th>
+</tr>
+<tr>
+<td>
+
+```
+已 PROMOTE: cross / calib / cate-OOF / β2 / gap-Fourier
+已 CLOSED:  focal / pairwise / id-sparse / d-model cross
+目标 LB:    Top 50 cutoff 0.829
+当前 LB:    0.825，差 0.004
+症状：     每个新实验 +0.0005 量级，明显见顶
+"我下一个该试什么？已经穷尽了我能想到的方向..."
+```
+
+</td>
+<td>
+
+```
+/deep-search dreamwalk "post-plateau, need new families"
+   ↓ (Codex 1-round + WebFetch 引用核查, ~15 min)
+[deep-search] dreamwalk, mode=local+external
+派出宽搜：把已 CLOSED+PROMOTED 当排除项
+返回 8 paper / 5 机制族：
+  - hyper-network 条件化 (arxiv 2603.xxxxx)
+  - 行为-感知 MoE (arxiv 2604.xxxxx)
+  - 对比 SSL 纯 ID (arxiv 2602.xxxxx)
+  - 校准变体 beyond Platt (arxiv 2606.xxxxx)
+  - 自适应训练对抗漂移 (arxiv 2605.xxxxx)
+分流：自动剔除多模态依赖、自动标"高风险换 backbone"
+排序：按 EV × P(success) ÷ 实现成本
+Top-2 → 下一步 precheck → 实验
 ```
 
 </td>

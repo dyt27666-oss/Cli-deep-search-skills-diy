@@ -8,13 +8,14 @@
 
 ## 1. Entry point
 
-`/deep-search <subcommand> [args]` — three subcommands, one skill.
+`/deep-search <subcommand> [args]` — four subcommands, one skill.
 
 | Subcommand | Usage | Trigger |
 |---|---|---|
 | `postmortem <job_id>` | After an experiment run hits terminal state | Manual (later: auto via hook) |
 | `inquiry "<question>"` | Hunch / cross-experiment question | Manual |
 | `precheck "<proposed exp idea>"` | Evidence search for a proposed experiment direction | Manual |
+| `dreamwalk "<scope hint>"` | Project plateau / cross-axis discovery — wide-net paper hunt outside currently-explored axes | Manual (when team explicitly hits a wall on known axes) |
 
 **Mandatory announcement rule**: every invocation, BEFORE doing tool calls, output one line stating:
 - Subcommand chosen
@@ -25,7 +26,7 @@ Example: `[deep-search] postmortem 98238, mode=local-only — both jobs not yet 
 
 ---
 
-## 2. Gates (shared by all three subcommands)
+## 2. Gates (shared by all four subcommands)
 
 ### Gate A — Decide whether to invoke external paper search
 

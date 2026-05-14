@@ -18,9 +18,13 @@
   <img src="https://img.shields.io/badge/type-Skill-f59e0b.svg" alt="Type: Skill">
 </p>
 
-<p>A project-local Claude Code skill · <code>/deep-search</code> with four subcommands · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
+<p>A project-local Claude Code skill · <code>/deep-search</code> with four subcommands (postmortem · inquiry · precheck · <strong>dreamwalk</strong>) · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
 
 </div>
+
+---
+
+> 🆕 **New in 2026-05**: a fourth subcommand `dreamwalk` — when your project plateaus, deliberately **wander away from your current focus**. Feeds your CLOSED + PROMOTED axes to Codex as **exclusion criteria**, demanding 8-12 verifiable 2026 papers across 5+ distinct mechanism families. Built for "I've squeezed +0.0005 increments out of known axes; I need a wider jump". See [workflows/dreamwalk.md](./workflows/dreamwalk.md).
 
 ---
 
@@ -32,6 +36,7 @@ There is a recurring pain in competition / industrial ML workflows:
 - 📚 **Decision evidence is scattered across 5 files** — `decision_log.md` / `experiment_logs/*.md` / `memory/feedback_*.md` / `docs/paper_priors.md` / platform metric CSVs. Cross-file retrieval and cross-checking are mentally taxing
 - 🔍 **Paper search burns tokens** — naive arXiv + Semantic Scholar pulls cost 30k+ tokens per query, and GPT may hallucinate non-existent papers
 - 🧭 **No unified entry for new-direction research** — papers, notes, memory, and platform records are scattered, so judging one direction means manually stitching evidence together
+- 🪤 **Known-axis +EV ceiling** — empirically +0.005 → +0.001 → +0.0005, each new layer harder than the last, and you can't see "what direction has bigger headroom"
 
 ### Before / After
 
@@ -67,6 +72,52 @@ axis=gating → CLOSED-AXIS-HIT
 Smoking gun: experiment_logs/exp_d.md:21
 Verdict: REDUCED-PRIORITY — 3 prior attempts found at lower-weight scores, plus 5 papers suggesting alternative gating styles. Decision: yours.
 Report: docs/research/.../report.md
+```
+
+</td>
+</tr>
+</table>
+
+### 🆕 dreamwalk — cross-axis discovery when you've plateaued
+
+<table>
+<tr>
+<th align="left">😩 Stuck on known axes</th>
+<th align="left">✨ /deep-search dreamwalk effect</th>
+</tr>
+<tr>
+<td>
+
+```
+PROMOTED: cross / calib / cate-OOF / β2 / gap-Fourier
+CLOSED:   focal / pairwise / id-sparse / d-model cross
+Target:   Top-50 cutoff LB 0.829
+Current:  LB 0.825, gap 0.004
+Symptom:  each new experiment is +0.0005 grade,
+          known axes clearly saturating
+"What do I try next? I've exhausted everything
+ I could think of..."
+```
+
+</td>
+<td>
+
+```
+/deep-search dreamwalk "post-plateau, need new families"
+   ↓ (Codex 1-round + WebFetch verify, ~15 min)
+[deep-search] dreamwalk, mode=local+external
+Dispatches wide-net: CLOSED + PROMOTED axes
+become EXCLUSION criteria for Codex
+Returns 8 papers across 5 mechanism families:
+  - hyper-network conditioning (arxiv 2603.xxxxx)
+  - behavior-aware MoE (arxiv 2604.xxxxx)
+  - contrastive SSL on pure IDs (arxiv 2602.xxxxx)
+  - calibration variants beyond Platt (arxiv 2606.xxxxx)
+  - adaptive training vs shift (arxiv 2605.xxxxx)
+Auto-triage: drops multimodal-dependent papers,
+flags backbone-replacement ones as high risk
+Ranked by EV × P(success) ÷ implementation cost
+Top-2 → next precheck → experiment
 ```
 
 </td>
