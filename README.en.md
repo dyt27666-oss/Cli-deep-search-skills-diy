@@ -133,6 +133,7 @@ Top-2 → next precheck → experiment
 - 💬 **Gate C plain-language chips** — major findings surfaced as everyday-language chips before any prior update
 - 📐 **Token-safe retrieval** — 250k-row metric CSV goes through a helper wrapper, never directly Read
 - 📂 **Local-first / external opt-in** — defaults to repo-local 5 sources; external search needs explicit user authorization via chips
+- ⏱️ **Dreamwalk stuck-task safety net** — 25-minute hard time budget + per-paper incremental append to `papers.md` + `progress.log` 5-min pings + re-dispatched runs auto-resume already-verified arXiv IDs (no redo)
 - 🚫 **Never auto-commits** — `prior_updates.diff` is a draft; user reviews + applies manually
 - 🔌 **MediaCrawler-ready** — Phase 2 protocol for community platforms (Xiaohongshu/Zhihu/B站) is spec'd; CDP mode for low account-ban risk
 

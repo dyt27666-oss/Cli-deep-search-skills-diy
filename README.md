@@ -128,6 +128,7 @@ Top-2 → 下一步 precheck → 实验
 - 💬 **Gate C 通俗 chips** — 重大发现先用人话告诉你，再问要不要更新 prior
 - 📐 **Token-safe 检索** — 250k 行 metric CSV 走 helper 包装，永不直接 Read
 - 📂 **本地优先 / 外搜可选** — 默认只用 repo 本地 5 个数据源；外搜需 chips 显式授权
+- ⏱️ **dreamwalk 防卡死协议** — 25 min 硬时间预算 + 每篇 paper 增量 append 到 `papers.md` + `progress.log` 5 min ping + 重派自动 resume 已 verified 的 paper（不重做）
 - 🚫 **永不自动 commit** — 输出的 prior diff 是草稿，用户 review 后手动 apply
 - 🔌 **MediaCrawler 接入预留** — 社群平台（小红书/知乎/B站）的 Phase 2 协议已 spec，CDP 模式低封号风险
 
