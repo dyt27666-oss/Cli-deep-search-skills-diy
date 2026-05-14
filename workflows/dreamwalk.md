@@ -70,13 +70,73 @@ If the user is still iterating within known axes, use `precheck`. Only fall to `
 
 ## Output
 
-Directory: `docs/research/deep_search/<YYYYMMDD-HHMM>_dreamwalk/`
+### Directory naming
 
-Required files:
+`docs/research/deep_search/<YYYY-MM-DD>_dreamwalk_<TAG>/`
+
+The `<TAG>` is **mandatory** and follows a strict schema (see below). One dreamwalk run = one TAG. Future runs that hit the same TAG should resume into the existing dir (per the resume rule), not create parallel dirs.
+
+### Mandatory TAG schema
+
+Format: `[<AXIS-STATE>-<SCOPE-WORD>]` — uppercase, hyphen-separated, ≤ 30 chars.
+
+`<AXIS-STATE>` documents WHY this dreamwalk fires (the project state that triggered it):
+- `POST-PROMOTE-PLATEAU` — last few experiments PROMOTED but +EV diminishing
+- `POST-KILL-PIVOT` — last 2+ KILL on same axis, looking for new axis
+- `PRE-SUBMISSION-DOUBLECHECK` — final pre-Round-N check for missing mechanism families
+- `RECOVERY-AFTER-STUCK` — earlier dreamwalk stuck/incomplete, this is the retry
+
+`<SCOPE-WORD>` is the breadth modifier:
+- `WIDE` — 5+ mechanism families, "show me everything"
+- `NARROW-<axis>` — single named axis evolution (e.g. `NARROW-ATTENTION`, `NARROW-CALIBRATION`)
+- `DEPTH-<axis>` — pile up evidence on one axis already-considered
+
+Example tags: `[POST-PROMOTE-PLATEAU-WIDE]`, `[POST-KILL-PIVOT-NARROW-CALIBRATION]`, `[RECOVERY-AFTER-STUCK-WIDE]`.
+
+### papers.md header (Codex MUST write this verbatim at file creation, before any paper)
+
+```markdown
+# Dreamwalk: [<TAG>] — <YYYY-MM-DD>
+
+## Tag
+`[<TAG>]`
+
+## Scope hint
+<the verbatim "scope hint" argument the user passed; full sentence>
+
+## Trigger
+- <one-line: what made this dreamwalk fire — competition cutoff gap, recent KILL pattern, plateau, etc>
+- <one-line: any user-cited number/threshold relevant to the search>
+
+## Project snapshot at run time
+- SOTA exp: <id + LB + 1-line mechanism>
+- In flight: <list of in-flight job ids if any>
+- Daily eval quota: <N>, threshold +<expected lift minimum>
+- Backbone constraint: <whether backbone replacement is on/off the table>
+
+## STATUS: RUNNING
+
+## Verified Papers
+<incremental append-only — each verified paper goes here>
+
+## In-Progress
+<current arXiv ID being researched, blank when idle>
+```
+
+Required files in the dir:
 - `dreamwalk_brief.md` — the Codex brief verbatim (for reproducibility)
-- `papers.md` — Codex writes this incrementally: `## Verified Papers` (one per arXiv ID, appended live) + `## In-Progress` (current arXiv being researched) + `## STATUS` header (one of: `RUNNING`, `PARTIAL_AT_25MIN`, `COMPLETE`, `STUCK_ABORTED`)
+- `papers.md` — Codex writes this incrementally per the header schema above + `## STATUS` value (one of: `RUNNING`, `PARTIAL_AT_25MIN`, `COMPLETE`, `STUCK_ABORTED`)
 - `progress.log` — Codex appends a one-line ping every 5 min: `[HH:MM] phase=<x> papers_verified=<N> currently=<arxiv_id or 'idle'>`. Used by Claude to detect stalls.
 - `recommendation.md` — top 2-3 candidates with priority ranking + rationale (written by Claude after dreamwalk completes, NOT by Codex)
+
+### Why TAG matters (rationale)
+
+Without a tag, future sessions can only find dreamwalks by date and a generic "wide" / "narrow" descriptor. With a tag, you can:
+- Grep `[POST-PROMOTE-PLATEAU-*]` across all dreamwalks to compare what mechanism families surfaced at each plateau in project history
+- Filter "have we already dreamwalked the calibration axis under PIVOT?" before re-dispatching
+- Build a long-term knowledge graph of dreamwalk-state-vs-paper-recommendation that informs prior updates
+
+Untagged dreamwalks become indistinguishable archaeology after 2-3 weeks. Every dreamwalk must carry its provenance.
 
 Optional: `external_research.md` if WebFetch verification of any specific arXiv ID was needed (the Codex companion already does this internally; only re-fetch when a paper looks borderline).
 
