@@ -2,10 +2,12 @@
 name: deep-search
 description: |
   Project-local knowledge-search skill that turns experiment outcomes into reusable evidence.
-  Three subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (search prior evidence for a proposed experiment direction). Uses your experiment platform exports + local
-  docs + memory; delegates external paper search to Codex via a 1-round challenge protocol and
-  verifies citations with WebFetch. Surfaces major findings as plain-language chips to the user.
+  Four subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
+  precheck (search prior evidence for a proposed experiment direction), and dreamwalk (wide-net
+  paper hunt to surface NEW mechanism families when the project plateaus). Uses your experiment
+  platform exports + local docs + memory; delegates external paper search to Codex via a 1-round
+  challenge protocol and verifies citations with WebFetch. Surfaces major findings as plain-language
+  chips to the user.
 allowed-tools:
   - Read
   - Grep
@@ -35,6 +37,7 @@ Examples:
 - `[deep-search] postmortem 98238, mode=local-only — terminal status is not confirmed yet, so only local scrape evidence is safe.`
 - `[deep-search] inquiry "为什么 valid ↑ 不预测 LB ↑？", mode=local-only — prior local evidence is expected to be sufficient.`
 - `[deep-search] precheck "ExpA add layer-norm gating", mode=local-only — searching local axis evidence before optional external research.`
+- `[deep-search] dreamwalk "post-plateau on PCVR, need new mechanism families", mode=local+external — wide-net search outside currently-explored axes.`
 
 If Gate A later proposes paper search, announce the transition before external retrieval: `[deep-search] Gate A, mode=local+external — local evidence is insufficient or contradicted.`
 
@@ -45,6 +48,7 @@ If Gate A targets a community platform (XHS / Zhihu / B站 etc.) instead of pape
 - For `/deep-search postmortem <job_id>`, follow `workflows/postmortem.md`.
 - For `/deep-search inquiry "<question>"`, follow `workflows/inquiry.md`.
 - For `/deep-search precheck "<proposed exp idea>"`, follow `workflows/precheck.md`.
+- For `/deep-search dreamwalk "<scope hint>"`, follow `workflows/dreamwalk.md` — wide-net cross-axis paper hunt when the project has plateaued and needs NEW mechanism families.
 
 Load shared rules as needed:
 

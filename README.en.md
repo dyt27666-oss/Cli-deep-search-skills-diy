@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/type-Skill-f59e0b.svg" alt="Type: Skill">
 </p>
 
-<p>A project-local Claude Code skill · <code>/deep-search</code> with three subcommands · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
+<p>A project-local Claude Code skill · <code>/deep-search</code> with four subcommands · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
 
 </div>
 
@@ -77,7 +77,7 @@ Report: docs/research/.../report.md
 
 ## ✨ Features
 
-- 🔬 **Three subcommands in one skill** — `postmortem` (search retrospectively for what just happened + cross-link evidence) / `inquiry` (cross-experiment Q&A) / `precheck` (axis-evidence search before action)
+- 🔬 **Four subcommands in one skill** — `postmortem` (search retrospectively for what just happened + cross-link evidence) / `inquiry` (cross-experiment Q&A) / `precheck` (axis-evidence search before action) / `dreamwalk` (deliberately wander away from current focus to surface NEW mechanism families when the project plateaus)
 - 🔎 **Gate A two-stage external search** — 1-round Codex challenge on search angles → user picks via chips → every citation force-verified by WebFetch
 - 💬 **Gate C plain-language chips** — major findings surfaced as everyday-language chips before any prior update
 - 📐 **Token-safe retrieval** — 250k-row metric CSV goes through a helper wrapper, never directly Read
@@ -158,6 +158,14 @@ Prerequisite: your platform exposes a job summary file — see retrieval/data_so
 
 Retrieves across `decision_log.md` + `experiment_logs/` + `memory/`. If local hits ≥ 3, refuses external search; if insufficient, surfaces a chip asking for authorization.
 
+### Advanced: dreamwalk for cross-axis discovery when stuck
+
+```
+/deep-search dreamwalk "post-plateau on PCVR, already explored cross / calib / cate-OOF / optimizer-β2; need NEW mechanism families"
+```
+
+Deliberately **wanders away from current focus**: feeds the CLOSED + PROMOTED axes to Codex as **exclusion criteria**, demands 8-12 papers across 5+ distinct mechanism families with 2026 freshness enforced. Use when "I've squeezed +0.0005 increments out of known axes; I need a wider jump".
+
 ---
 
 ## 🏷️ Subcommand Overview
@@ -167,6 +175,7 @@ Retrieves across `decision_log.md` + `experiment_logs/` + `memory/`. If local hi
 | `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
 | `inquiry "<question>"` | Cross-experiment Q&A | local-only | < 3 local hits |
 | `precheck "<new exp idea>"` | search for prior evidence on a proposed direction | local-only | Mechanism absent from `paper_priors.md` AND user wants paper-grounded check |
+| `dreamwalk "<scope hint>"` | **project plateaued** / known-axis +EV saturated — wide-net cross-axis search for NEW mechanism families | **always local+external** | auto (the whole point of dreamwalk is external) |
 
 Every invocation outputs a **mandatory first announcement line**:
 
@@ -251,7 +260,8 @@ Every invocation outputs a **mandatory first announcement line**:
 ├── workflows/
 │   ├── postmortem.md          # post-job analysis steps
 │   ├── inquiry.md             # cross-experiment Q&A steps
-│   └── precheck.md            # evidence-search-before-action steps
+│   ├── precheck.md            # evidence-search-before-action steps
+│   └── dreamwalk.md           # wide-net cross-axis paper hunt (post-plateau)
 ├── gates/
 │   ├── gate_a_external_search.md   # external search + 1-round Codex cap
 │   └── gate_c_major_finding.md     # major-finding chips protocol

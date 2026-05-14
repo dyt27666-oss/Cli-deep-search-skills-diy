@@ -76,7 +76,7 @@ Verdict: 降权 —— 同轴已 3 次尝试低分，但不代表方向失活。
 
 ## ✨ 特性
 
-- 🔬 **三 subcommand 一个 skill** — `postmortem`（回看刚发生的实验并串证据）/ `inquiry`（跨实验问答）/ `precheck`（行动前先验证据搜索）
+- 🔬 **四 subcommand 一个 skill** — `postmortem`（回看刚发生的实验并串证据）/ `inquiry`（跨实验问答）/ `precheck`（行动前先验证据搜索）/ `dreamwalk`（项目卡顿时主动远离已知 axis 找新机制族的宽搜）
 - 🔎 **Gate A 两阶段外搜** — Codex 1 轮 challenge 搜索角度 → 用户 chips 选 → 每条引用强制 WebFetch 验证
 - 💬 **Gate C 通俗 chips** — 重大发现先用人话告诉你，再问要不要更新 prior
 - 📐 **Token-safe 检索** — 250k 行 metric CSV 走 helper 包装，永不直接 Read
@@ -169,15 +169,24 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 
 跨 `decision_log.md` + `experiment_logs/` + `memory/` 检索，本地证据 ≥3 hits 时绝不外搜；不足时 chips 问你授权。
 
+### 进阶：项目卡顿时主动梦游找新机制族
+
+```
+/deep-search dreamwalk "post-plateau on PCVR, already explored cross / calib / cate-OOF / optimizer-β2; need NEW mechanism families"
+```
+
+故意**远离当前 focus** 的宽搜：把 CLOSED + PROMOTED 轴当**排除项**喂给 Codex，要求 8-12 paper 覆盖 5+ 个机制族，2026 freshness 强制。适用于"我已经在已知轴上 +0.0005 量级压榨到头了，需要找跨度更大的新方向"。
+
 ---
 
-## 🏷️ 三个 subcommand 总览
+## 🏷️ 四个 subcommand 总览
 
 | Subcommand | 触发场景 | 默认模式 | Gate A 触发条件 |
 |---|---|---|---|
 | `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
 | `inquiry "<问题>"` | 跨实验问答 | local-only | 本地命中 < 3 |
 | `precheck "<新实验描述>"` | search for prior evidence on a proposed direction | local-only | 机制不在 `paper_priors.md` 且用户要论文核查 |
+| `dreamwalk "<scope hint>"` | **项目卡顿 / 已知轴 +EV 见顶** 时主动远离当前 focus 找新机制族 | **always local+external** | 自动触发（dreamwalk 的本质就是外搜）|
 
 每次调用 skill 都会**先输出一行 announcement**，明确选了哪个 subcommand、什么模式、为什么：
 
@@ -261,7 +270,8 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 ├── workflows/
 │   ├── postmortem.md          # 实验后复盘步骤
 │   ├── inquiry.md             # 跨实验问答步骤
-│   └── precheck.md            # 行动前证据搜索步骤
+│   ├── precheck.md            # 行动前证据搜索步骤
+│   └── dreamwalk.md           # 卡顿期跨轴新机制族宽搜
 ├── gates/
 │   ├── gate_a_external_search.md   # 外搜协议 + Codex 1 轮 cap
 │   └── gate_c_major_finding.md     # 重大发现 chips 协议
