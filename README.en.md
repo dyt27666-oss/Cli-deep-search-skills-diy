@@ -18,13 +18,13 @@
   <img src="https://img.shields.io/badge/type-Skill-f59e0b.svg" alt="Type: Skill">
 </p>
 
-<p>A project-local Claude Code skill · <code>/deep-search</code> with four subcommands (postmortem · inquiry · precheck · <strong>dreamwalk</strong>) · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
+<p>A project-local Claude Code skill · <code>/deep-search</code> with three subcommands (postmortem · inquiry · precheck) + <strong>dreamwalk opt-in mode</strong> · auto-pulls evidence from 5 sources · WebFetch-verifies GPT paper citations · never auto-commits</p>
 
 </div>
 
 ---
 
-> 🆕 **New in 2026-05**: a fourth subcommand `dreamwalk` — when your project plateaus, deliberately **wander away from your current focus**. Feeds your CLOSED + PROMOTED axes to Codex as **exclusion criteria**, demanding 8-12 verifiable 2026 papers across 5+ distinct mechanism families. Built for "I've squeezed +0.0005 increments out of known axes; I need a wider jump". See [workflows/dreamwalk.md](./workflows/dreamwalk.md).
+> 🆕 **New in 2026-05**: **dreamwalk opt-in mode** — different *stance* from the three subcommands. Where deep-search is detailed + specific, dreamwalk is divergent + fast (25-min hard cap). Feeds your CLOSED + PROMOTED axes to Codex as exclusion criteria, wide-net searches ≥4 mechanism families. **Defaults to OFF**; once enabled, auto-fires on "new knowledge points" (experiment results / user-supplied info / time intervals). Configured like `/deep-search dreamwalk on --on-experiment yes --every 6h`. See [workflows/dreamwalk.md](./workflows/dreamwalk.md).
 
 ---
 
@@ -128,7 +128,7 @@ Top-2 → next precheck → experiment
 
 ## ✨ Features
 
-- 🔬 **Four subcommands in one skill** — `postmortem` (search retrospectively for what just happened + cross-link evidence) / `inquiry` (cross-experiment Q&A) / `precheck` (axis-evidence search before action) / `dreamwalk` (deliberately wander away from current focus to surface NEW mechanism families when the project plateaus)
+- 🔬 **Three subcommands + one opt-in mode** — core `postmortem` / `inquiry` / `precheck` take a **detailed-specific stance**; auxiliary `dreamwalk` takes a **divergent-fast stance**, defaults OFF, auto-fires on new knowledge points once enabled
 - 🔎 **Gate A two-stage external search** — 1-round Codex challenge on search angles → user picks via chips → every citation force-verified by WebFetch
 - 💬 **Gate C plain-language chips** — major findings surfaced as everyday-language chips before any prior update
 - 📐 **Token-safe retrieval** — 250k-row metric CSV goes through a helper wrapper, never directly Read
@@ -227,7 +227,21 @@ Deliberately **wanders away from current focus**: feeds the CLOSED + PROMOTED ax
 | `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / conflicts with Semantic prior |
 | `inquiry "<question>"` | Cross-experiment Q&A | local-only | < 3 local hits |
 | `precheck "<new exp idea>"` | search for prior evidence on a proposed direction | local-only | Mechanism absent from `paper_priors.md` AND user wants paper-grounded check |
-| `dreamwalk "<scope hint>"` | **project plateaued** / known-axis +EV saturated — wide-net cross-axis search for NEW mechanism families | **always local+external** | auto (the whole point of dreamwalk is external) |
+
+### Auxiliary mode: dreamwalk (different stance from the 3 subcommands)
+
+| Dimension | `/deep-search` (3 subcommands) | `dreamwalk` mode |
+|---|---|---|
+| Style | Detailed / evidence-chain | Divergent / wide net |
+| Wall time | Long (no cap, depth-first) | Short (25-min hard cap) |
+| Output | Deep trace + citation audit + design | ≤8 papers across ≥4 mechanism families |
+| Trigger | Manual, explicit per question | **opt-in, defaults OFF**; once enabled, **auto-fires** on new knowledge points |
+
+Toggle commands:
+- `/deep-search dreamwalk status` — show mode + trigger config
+- `/deep-search dreamwalk on [--on-experiment yes|no] [--on-user-info yes|no] [--every <duration>]` — enable
+- `/deep-search dreamwalk off` — disable
+- `/deep-search dreamwalk now "<scope hint>"` — one-shot manual fire (no state change)
 
 Every invocation outputs a **mandatory first announcement line**:
 

@@ -2,12 +2,13 @@
 name: deep-search
 description: |
   Project-local knowledge-search skill that turns experiment outcomes into reusable evidence.
-  Four subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
-  precheck (search prior evidence for a proposed experiment direction), and dreamwalk (wide-net
-  paper hunt to surface NEW mechanism families when the project plateaus). Uses your experiment
-  platform exports + local docs + memory; delegates external paper search to Codex via a 1-round
-  challenge protocol and verifies citations with WebFetch. Surfaces major findings as plain-language
-  chips to the user.
+  Three core subcommands: postmortem (after a job hits terminal state), inquiry (cross-experiment Q&A),
+  precheck (search prior evidence for a proposed experiment direction). Plus an OPT-IN auxiliary mode:
+  dreamwalk (wide-net divergent paper hunt to surface NEW mechanism families when the project
+  plateaus). The three subcommands are detailed/specific stance; dreamwalk is divergent/fast stance —
+  the two are deliberately separate and dreamwalk defaults to OFF. Uses your experiment platform
+  exports + local docs + memory; delegates external paper search to Codex via a 1-round challenge
+  protocol and verifies citations with WebFetch. Surfaces major findings as plain-language chips.
 allowed-tools:
   - Read
   - Grep
@@ -45,10 +46,19 @@ If Gate A targets a community platform (XHS / Zhihu / B站 etc.) instead of pape
 
 ## Dispatch
 
+### Three core subcommands (detailed / specific stance)
 - For `/deep-search postmortem <job_id>`, follow `workflows/postmortem.md`.
 - For `/deep-search inquiry "<question>"`, follow `workflows/inquiry.md`.
 - For `/deep-search precheck "<proposed exp idea>"`, follow `workflows/precheck.md`.
-- For `/deep-search dreamwalk "<scope hint>"`, follow `workflows/dreamwalk.md` — wide-net cross-axis paper hunt when the project has plateaued and needs NEW mechanism families.
+
+### Auxiliary opt-in mode (divergent / fast stance)
+Dreamwalk is **not a fourth subcommand**. It is an opt-in mode that fires auto-dreamwalks on new knowledge points after the user enables it. It defaults to OFF in every session.
+- `/deep-search dreamwalk status` — show mode + trigger config
+- `/deep-search dreamwalk on [--on-experiment yes|no] [--on-user-info yes|no] [--every <duration>]` — enable mode
+- `/deep-search dreamwalk off` — disable mode
+- `/deep-search dreamwalk now "<scope hint>"` — one-shot manual fire (no state change)
+
+When dreamwalk fires (manually via `now` OR auto via enabled triggers), follow `workflows/dreamwalk.md`.
 
 Load shared rules as needed:
 

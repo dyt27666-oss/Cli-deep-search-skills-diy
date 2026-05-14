@@ -18,13 +18,13 @@
   <img src="https://img.shields.io/badge/type-Skill-f59e0b.svg" alt="Type: Skill">
 </p>
 
-<p>一个 Claude Code 项目本地 skill · <code>/deep-search</code> 四 subcommand（postmortem · inquiry · precheck · <strong>dreamwalk</strong>）· 自动从 5 个数据源捞证据 · GPT 论文幻觉自动核查 · 永不自动 commit</p>
+<p>一个 Claude Code 项目本地 skill · <code>/deep-search</code> 三 subcommand（postmortem · inquiry · precheck）+ <strong>dreamwalk 梦游模式（opt-in）</strong> · 自动从 5 个数据源捞证据 · GPT 论文幻觉自动核查 · 永不自动 commit</p>
 
 </div>
 
 ---
 
-> 🆕 **2026-05 新增** ：第四个 subcommand `dreamwalk` —— 项目卡顿时主动**远离当前 focus** 的宽搜，把 CLOSED + PROMOTED 轴当**排除项**喂给 Codex，要 8-12 篇 2026 paper 覆盖 5+ 机制族。适用于"已知轴 +EV 压榨到 +0.0005 量级，需要找跨度更大的方向"。详见 [workflows/dreamwalk.md](./workflows/dreamwalk.md)。
+> 🆕 **2026-05 新增** ：**梦游 (dreamwalk) opt-in 模式** —— 跟三个 subcommand 不同，dreamwalk 是**发散 + 快**的辅助模式（25 min 硬限），故意远离当前 focus，把 CLOSED + PROMOTED 轴当排除项喂 Codex，宽搜 ≥4 机制族。**默认 OFF**；用户开 ON 后会在「新知识点」（实验结果 / 用户提点 / 时间间隔）时自动触发。配置如 `/deep-search dreamwalk on --on-experiment yes --every 6h`。详见 [workflows/dreamwalk.md](./workflows/dreamwalk.md)。
 
 ---
 
@@ -123,7 +123,7 @@ Top-2 → 下一步 precheck → 实验
 
 ## ✨ 特性
 
-- 🔬 **四 subcommand 一个 skill** — `postmortem`（回看刚发生的实验并串证据）/ `inquiry`（跨实验问答）/ `precheck`（行动前先验证据搜索）/ `dreamwalk`（项目卡顿时主动远离已知 axis 找新机制族的宽搜）
+- 🔬 **三 subcommand + 一个模式** — 核心 `postmortem`（回看刚发生的实验并串证据）/ `inquiry`（跨实验问答）/ `precheck`（行动前先验证据搜索）走**详细具体**路线；辅助 `dreamwalk` 走**发散快搜**路线，opt-in 模式，默认 OFF，开启后在新知识点自动触发
 - 🔎 **Gate A 两阶段外搜** — Codex 1 轮 challenge 搜索角度 → 用户 chips 选 → 每条引用强制 WebFetch 验证
 - 💬 **Gate C 通俗 chips** — 重大发现先用人话告诉你，再问要不要更新 prior
 - 📐 **Token-safe 检索** — 250k 行 metric CSV 走 helper 包装，永不直接 Read
@@ -234,7 +234,23 @@ Claude Code 启动时加载 skills。安装后在 Claude Code 里打开 `/hooks`
 | `postmortem <job_id>` | search retrospectively for what just happened + cross-link evidence | local-only | PROMOTE ≥ +0.003 / surprise KILL / 与 Semantic prior 冲突 |
 | `inquiry "<问题>"` | 跨实验问答 | local-only | 本地命中 < 3 |
 | `precheck "<新实验描述>"` | search for prior evidence on a proposed direction | local-only | 机制不在 `paper_priors.md` 且用户要论文核查 |
-| `dreamwalk "<scope hint>"` | **项目卡顿 / 已知轴 +EV 见顶** 时主动远离当前 focus 找新机制族 | **always local+external** | 自动触发（dreamwalk 的本质就是外搜）|
+
+### 辅助模式：梦游 (dreamwalk)
+
+跟三个 subcommand **不同性质** — 详细 vs 发散，详细如下表：
+
+| 维度 | `/deep-search` (三 subcommand) | `dreamwalk` 模式 |
+|---|---|---|
+| 风格 | 详细 / 证据链具体 | 发散 / 宽撒网 |
+| 时长 | 长（按需深挖，无上限）| 短（25 min 硬限）|
+| 输出 | 深 trace + 引用核查 + 实验设计 | ≤8 paper 跨 ≥4 机制族粗筛 |
+| 触发 | 手动每次显式调用 | **opt-in，默认 OFF**；开启后**自动**在新知识点触发 |
+
+控制命令：
+- `/deep-search dreamwalk status` — 查看模式状态
+- `/deep-search dreamwalk on [--on-experiment yes\|no] [--on-user-info yes\|no] [--every <duration>]` — 开启模式
+- `/deep-search dreamwalk off` — 关闭
+- `/deep-search dreamwalk now "<scope hint>"` — 一次性手动触发（不改状态）
 
 每次调用 skill 都会**先输出一行 announcement**，明确选了哪个 subcommand、什么模式、为什么：
 

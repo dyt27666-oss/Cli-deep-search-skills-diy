@@ -1,23 +1,83 @@
-# /deep-search dreamwalk "<scope hint>"
+# Dreamwalk — an OPT-IN auxiliary mode of /deep-search
 
-Purpose: open-ended, wide-net paper hunt that surfaces NEW mechanism families the team hasn't explored yet. Use when the project is plateauing on incremental +EV from already-explored axes and needs cross-axis breadth — NOT when there is a specific question (`inquiry`) or a proposed direction (`precheck`).
+## What dreamwalk IS (vs `/deep-search` proper)
 
-The mode is called **dreamwalk** (梦游) because it intentionally **wanders away** from the project's current focus. The point is to find mechanism families the team hasn't considered yet, not to validate an existing hypothesis.
+Dreamwalk and deep-search are **two different research stances** that share the same skill umbrella but have opposite characters. The distinction is load-bearing — confusing them is the most common /deep-search misuse:
 
-## When to invoke dreamwalk vs inquiry vs precheck
+| Dimension | `/deep-search` (postmortem / inquiry / precheck) | **Dreamwalk (mode)** |
+|---|---|---|
+| Style | Specific, evidence-chain | Divergent, wide-net |
+| Wall time per run | Long (no upper bound; depth-first) | Short, hard-capped (25-min budget) |
+| Output | Deep trace + citation audit + design recommendation | Paper-family shortlist (≤ 8 papers across ≥ 4 families) |
+| User question shape | "Why did X happen / should I do Z?" — has a hypothesis | "I have no hypothesis — surprise me with what I haven't considered" |
+| Trigger | Manual (user invokes explicitly per question) | **Auto, opt-in** (fires on new knowledge points if enabled) |
 
-| Subcommand | When |
-|---|---|
-| `dreamwalk` | "I'm out of ideas / stuck below a competition threshold / need fundamentally new mechanism families" |
-| `inquiry` | "Why did X happen / what does the cross-experiment evidence say about Y" — focused Q&A |
-| `precheck` | "Should I run experiment Z" — axis evidence for ONE proposed direction |
+**Dreamwalk is NOT a fourth peer subcommand.** It is an **auxiliary mode** that runs alongside the three core deep-search subcommands. The peer subcommands are: `postmortem`, `inquiry`, `precheck`. Dreamwalk is OFF by default in every `/deep-search` invocation.
 
-If the user is still iterating within known axes, use `precheck`. Only fall to `dreamwalk` when the team has explicitly hit a wall ("we need a new axis", "current axes are exhausted", "we need bigger jumps").
+## Why opt-in (not always-on)
 
-## Required First Line
+Auto-firing dreamwalk on every postmortem/inquiry/precheck would burn Codex tokens + clutter the output dir. Most experimental updates **don't** need a new mechanism family hunt — they're well-served by the focused subcommand. Dreamwalk's value is in the rare moment when the project has genuinely plateaued and a wider net would change the next experiment's design. That's a user judgement call, hence opt-in.
+
+## State machine
 
 ```
-[deep-search] dreamwalk "<scope hint>", mode=local+external — wide-net search outside currently-explored axes
+                              ┌──────────────────┐
+                              │ dreamwalk: OFF   │  ← default in every new session
+                              │ (no auto-fires)  │
+                              └────────┬─────────┘
+                                       │
+                /deep-search dreamwalk on [config]
+                                       ▼
+                              ┌──────────────────┐
+                              │ dreamwalk: ON    │
+                              │ trigger config:  │
+                              │  - on-experiment │
+                              │  - on-user-info  │
+                              │  - every <N>     │
+                              └────────┬─────────┘
+                                       │
+                                       │ each enabled trigger fires
+                                       │ one dreamwalk per new knowledge point
+                                       ▼
+                              [run dreamwalk under strict protocol]
+                                       │
+                                       ▼
+              /deep-search dreamwalk off  →  back to OFF
+```
+
+## Toggling commands
+
+| Command | Effect |
+|---|---|
+| `/deep-search dreamwalk status` | Show current mode (ON/OFF), trigger config, last fire time |
+| `/deep-search dreamwalk on [--on-experiment yes\|no] [--on-user-info yes\|no] [--every <duration>]` | Enable mode with chosen trigger set |
+| `/deep-search dreamwalk off` | Disable mode (existing artifacts kept) |
+| `/deep-search dreamwalk now "<scope hint>"` | One-shot manual fire (no state change) |
+
+Default config when `on` is invoked without flags: `--on-experiment yes --on-user-info no --every off` (only fires on new experiment results, not on user mentions, no time interval).
+
+`<duration>` for `--every`: `<N>h` or `<N>experiments` (e.g. `--every 6h` or `--every 3experiments`). Human picks.
+
+## Trigger semantics (when dreamwalk: ON)
+
+A "new knowledge point" is what fires a dreamwalk. The three trigger sources:
+
+1. **`--on-experiment yes`** — when any `/deep-search postmortem <job_id>` completes with a verdict (`PROMOTE` / `NEUTRAL` / `KILL`), if the verdict materially changes the project's axis status table (e.g. a new axis closes or opens), fire one dreamwalk with auto-derived scope hint from the postmortem.
+
+2. **`--on-user-info yes`** — when the user explicitly provides new outside-the-system info ("top-50 cutoff just dropped to 0.832", "new paper X published", "competitor team Z hit 0.834"), the user can trigger a dreamwalk by saying so. Claude detects "new info" framing and asks whether to fire dreamwalk on it.
+
+3. **`--every <duration>`** — time- or count-based scheduled dreamwalk. Useful for sessions that span multiple hours/days where the human wants periodic out-of-the-box checks even without specific new info.
+
+**Interval is human-set, not auto-tuned.** The whole point of opt-in dreamwalk is that the human decides when "wider net" is worth Codex tokens.
+
+## When dreamwalk fires (manual or auto), follow the strict protocol below
+
+The protocol is identical regardless of trigger source. Manual `now` calls and auto-fires use the same brief template + same 25-min budget + same incremental checkpoint + same TAG schema.
+
+## Required First Line (when dreamwalk fires)
+
+```
+[deep-search] dreamwalk [TAG] "<scope hint>", mode=local+external, trigger=<manual|on-experiment|on-user-info|scheduled> — wide-net search outside currently-explored axes
 ```
 
 `dreamwalk` is **always** `mode=local+external` because the goal is precisely to find things NOT in local evidence. There is no local-only dreamwalk.
